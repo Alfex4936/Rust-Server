@@ -1,0 +1,2 @@
+[global.databases.my_db]
+url = "mysql://id:password@server/notices"
