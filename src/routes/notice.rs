@@ -43,7 +43,7 @@ pub fn db_test(conn: Conn) -> Result<Json<Vec<Schedule>>, Status> {
 
 fn error_status(error: Error) -> Status {
     match error {
-        Error::NotFound => Status::NotFound,
+        Error::NotFound => Status::Ok, // 챗봇은 무조건 200
         _ => Status::InternalServerError,
     }
 }

@@ -68,4 +68,87 @@ mod test {
         assert_eq!(json.len(), nums.trim().parse::<usize>().unwrap());
         Ok(())
     }
+
+    #[tokio::test]
+    async fn kakao_json() -> Result<(), reqwest::Error> {
+        use std::env;
+
+        let mut server = env::var("AWS_SERVER")
+            .unwrap_or("localhost:8000".to_string())
+            .to_string();
+
+        let query = "/v1/schedule".to_string();
+
+        server.push_str(&query);
+
+        let client = reqwest::Client::new();
+        let post = r#"{
+            "action": {
+                "clientExtra": {},
+                "detailParams": {
+                    "sys_text": {
+                        "groupName": "",
+                        "origin": "2021",
+                        "value": "2021"
+                    }
+                },
+                "id": "id",
+                "name": "스킬 이름",
+                "params": {
+                    "sys_text": "2021"
+                }
+            },
+            "bot": {
+                "id": "id",
+                "name": "botName"
+            },
+            "contexts": [],
+            "intent": {
+                "extra": {
+                    "reason": {
+                        "code": 1,
+                        "message": "OK"
+                    }
+                },
+                "id": "id",
+                "name": "intentName"
+            },
+            "userRequest": {
+                "block": {
+                    "id": "id",
+                    "name": "userRequestName"
+                },
+                "lang": "kr",
+                "params": {
+                    "ignoreMe": "true",
+                    "surface": "BuilderBotTest"
+                },
+                "timezone": "Asia/Seoul",
+                "user": {
+                    "id": "id",
+                    "properties": {
+                        "botUserKey": "key",
+                        "bot_user_key": "key"
+                    },
+                    "type": "botUserKey"
+                },
+                "utterance": "발화문\n"
+            }
+        }"#;
+        let res = client.post(server).json(post).send().await?;
+        // println!("Status: {}", res.status());
+        let body = res.text().await?;
+        let json: serde_json::Value = serde_json::from_str(&body).expect("Error");
+
+        let sub_values = json["template"]["outputs"][0]["carousel"]["items"]
+            .as_array()
+            .unwrap();
+
+        for sched in sub_values.iter() {
+            println!("title: {}", sched["title"].to_string());
+        }
+        // for sched in json["template"]["outputs"] as Vec<Notice> {}
+
+        Ok(())
+    }
 }
