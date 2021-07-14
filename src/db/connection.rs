@@ -26,12 +26,13 @@ pub fn init_pool() -> Pool {
     Pool::new(manager).expect("db pool")
 }
 
+// #[derive(ConnectionPool)]
 pub struct Conn(pub PooledConnection<ConnectionManager<MysqlConnection>>);
 
 impl Deref for Conn {
     type Target = MysqlConnection;
 
-    #[inline(always)]
+    // #[inline(always)]
     fn deref(&self) -> &Self::Target {
         &self.0
     }
@@ -40,7 +41,7 @@ impl Deref for Conn {
 impl<'a, 'r> FromRequest<'a, 'r> for Conn {
     type Error = ();
 
-    fn from_request(request: &'a Request<'r>) -> request::Outcome<Conn, ()> {
+    fn from_request(request: &'a Request<'r>) -> request::Outcome<Conn, Self::Error> {
         let pool = request.guard::<State<Pool>>()?;
         match pool.get() {
             Ok(conn) => Outcome::Success(Conn(conn)),
