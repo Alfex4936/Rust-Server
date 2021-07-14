@@ -30,24 +30,15 @@ pub fn hello() -> Json<Notice> {
 
 #[get("/db")]
 pub fn db_test(conn: Conn) -> Result<Json<Vec<Schedule>>, Status> {
-    query::show_scheds(&conn)
+    let result = query::show_scheds(&conn)
         .map(|sched| Json(sched))
-        .map_err(|error| error_status(error))
+        .map_err(|error| error_status(error));
 
-    // for row in result {
-    //     let (id, content, start_date, end_date): (i32, String, String, String) =
-    //         mysql::from_row(row.unwrap());
-    //     println!("id: {}, content: {}", id, content);
-    // }
+    for row in query::show_scheds(&conn).unwrap() {
+        println!("id: {}, content: {}", row.id, row.content);
+    }
 
-    // let notice = Notice {
-    //     id: 12345,
-    //     title: "공지1".to_string(),
-    //     date: "2021-07-09".to_string(),
-    //     link: "https://".to_string(),
-    //     writer: "CSW".to_string(),
-    // };
-    // Json(notice)
+    result
 }
 
 fn error_status(error: Error) -> Status {
