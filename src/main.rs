@@ -1,5 +1,6 @@
 use rustweb;
 
-fn main() {
+#[tokio::main]
+async fn main() {
     rustweb::rocket().launch();
 }

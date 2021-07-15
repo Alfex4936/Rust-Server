@@ -3,13 +3,25 @@
 use crate::db::schema::ajou_sched;
 // use diesel::prelude::*;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Notice {
     pub id: u64,
     pub title: String,
     pub date: String,
     pub link: String,
     pub writer: String,
+}
+
+impl Default for Notice {
+    fn default() -> Notice {
+        Notice {
+            id: 0,
+            title: "".to_string(),
+            date: "".to_string(),
+            link: "".to_string(),
+            writer: "".to_string(),
+        }
+    }
 }
 
 #[derive(Queryable, AsChangeset, Serialize, Deserialize)]

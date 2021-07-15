@@ -17,11 +17,16 @@ extern crate serde_derive;
 
 mod db;
 mod routes;
+mod utils;
 
 pub fn rocket() -> rocket::Rocket {
     rocket::ignite().manage(db::connection::init_pool()).mount(
         "/api",
-        routes![routes::notice::hello, routes::notice::db_test],
+        routes![
+            routes::notice::hello,
+            routes::notice::db_test,
+            routes::notice::notice_test,
+        ],
     )
 }
 

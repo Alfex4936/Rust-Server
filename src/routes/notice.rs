@@ -1,12 +1,15 @@
 #![allow(proc_macro_derive_resolution_fallback)]
-
 use crate::db::connection::Conn;
 use crate::db::models::Notice;
 use crate::db::models::Schedule;
 use crate::db::query;
+use std::io;
 
+use crate::utils::parse::html_parse;
 use rocket::http::Status;
 use rocket_contrib::json::Json;
+use serde_json::Value;
+use tokio::task;
 
 #[get("/hello")]
 pub fn hello() -> Json<Notice> {
@@ -31,4 +34,11 @@ pub fn db_test(conn: Conn) -> Result<Json<Vec<Schedule>>, Status> {
     }
 
     result
+}
+
+#[post("/notice", format = "json", data = "<kakao>")]
+pub fn notice_test(kakao: Json<Value>) -> Result<Json<Vec<Notice>>, Status> {
+    // println!("{}", kakao["userRequest"]["utterance"].as_str().unwrap()); // 발화문
+    let result = html_parse(Some(7)).unwrap();
+    Ok(Json(result))
 }

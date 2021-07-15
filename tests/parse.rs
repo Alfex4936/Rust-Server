@@ -157,9 +157,8 @@ mod test {
         use arr_macro::arr;
         use reqwest::header::USER_AGENT;
         use scraper::{Html, Selector};
-        use serde::{Deserialize, Serialize};
 
-        #[derive(Serialize, Deserialize, Debug)]
+        #[derive(Debug)]
         struct Notice {
             id: u64,
             title: String,
@@ -241,7 +240,6 @@ mod test {
             // Check duplication. title: [writer] blah -> title: [blah]
             let dup = "[".to_string() + &writer + "]";
             if title.contains(&dup) {
-                println!("checked: {}", title);
                 title.replace_range(0..dup.len(), "");
                 title = title.trim().to_string();
             }
