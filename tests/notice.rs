@@ -140,4 +140,39 @@ mod test {
 
         assert_eq!(json.userRequest["utterance"].as_str(), Some("발화문\n"));
     }
+
+    #[tokio::test]
+    async fn get_notices_from_ajou() -> Result<(), reqwest::Error> {
+        use reqwest::header::USER_AGENT;
+        use serde::{Deserialize, Serialize};
+
+        #[derive(Serialize, Deserialize, Debug)]
+        struct Notice {
+            id: u64,
+            title: String,
+            date: String,
+            link: String,
+            writer: String,
+        }
+
+        let mut ajou =
+            "https://www.ajou.ac.kr/kr/ajou/notice.do?mode=list&article.offset=0&articleLimit="
+                .to_string();
+
+        let nums = "5".to_string();
+
+        ajou.push_str(&nums);
+
+        let client = reqwest::Client::builder()
+            .danger_accept_invalid_certs(true)
+            .build()?;
+
+        let res = client.get(ajou).header(USER_AGENT, "User-Agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.114 Safari/537.36").send().await?;
+        // header 없이 보내면 404
+        let body = res.text().await?;
+
+        println!("Body:\n\n{:}", body);
+
+        Ok(())
+    }
 }

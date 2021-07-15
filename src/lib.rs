@@ -24,3 +24,12 @@ pub fn rocket() -> rocket::Rocket {
         routes![routes::notice::hello, routes::notice::db_test],
     )
 }
+
+use diesel::result::Error;
+use rocket::http::Status;
+pub fn error_status(error: Error) -> Status {
+    match error {
+        Error::NotFound => Status::Ok, // 챗봇은 무조건 200
+        _ => Status::InternalServerError,
+    }
+}

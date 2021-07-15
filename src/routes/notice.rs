@@ -1,20 +1,12 @@
+#![allow(proc_macro_derive_resolution_fallback)]
+
 use crate::db::connection::Conn;
+use crate::db::models::Notice;
 use crate::db::models::Schedule;
 use crate::db::query;
-use diesel;
-use diesel::result::Error;
+
 use rocket::http::Status;
 use rocket_contrib::json::Json;
-use serde::{Deserialize, Serialize};
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Notice {
-    id: u64,
-    title: String,
-    date: String,
-    link: String,
-    writer: String,
-}
 
 #[get("/hello")]
 pub fn hello() -> Json<Notice> {
@@ -32,18 +24,11 @@ pub fn hello() -> Json<Notice> {
 pub fn db_test(conn: Conn) -> Result<Json<Vec<Schedule>>, Status> {
     let result = query::show_scheds(&conn)
         .map(|sched| Json(sched))
-        .map_err(|error| error_status(error));
+        .map_err(|error| crate::error_status(error));
 
     for row in query::show_scheds(&conn).unwrap() {
         println!("id: {}, content: {}", row.id, row.content);
     }
 
     result
-}
-
-fn error_status(error: Error) -> Status {
-    match error {
-        Error::NotFound => Status::Ok, // 챗봇은 무조건 200
-        _ => Status::InternalServerError,
-    }
 }
