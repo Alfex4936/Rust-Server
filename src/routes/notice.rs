@@ -3,8 +3,8 @@ use crate::db::connection::Conn;
 use crate::db::models::Notice;
 use crate::db::models::Schedule;
 use crate::db::query;
-
 use crate::utils::parse::html_parse;
+
 use rocket::http::Status;
 use rocket_contrib::json::Json;
 use serde_json::Value;
@@ -27,9 +27,9 @@ pub fn db_test(conn: Conn) -> Result<Json<Vec<Schedule>>, Status> {
         .map(|sched| Json(sched))
         .map_err(|error| crate::error_status(error));
 
-    for row in query::show_scheds(&conn).unwrap() {
-        println!("id: {}, content: {}", row.id, row.content);
-    }
+    // for row in query::show_scheds(&conn).unwrap() {
+    //     println!("id: {}, content: {}", row.id, row.content);
+    // }
 
     result
 }

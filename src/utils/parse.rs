@@ -8,12 +8,12 @@ pub fn html_parse(_nums: Option<usize>) -> Result<Vec<Notice>, reqwest::Error> {
             .to_string();
 
     let nums_int = _nums.unwrap_or(5);
-    let nums = _nums.unwrap_or(5).to_string();
-    // let nums = "10".to_string();
+    let nums_str = nums_int.to_string();
 
-    ajou.push_str(&nums);
+    ajou.push_str(&nums_str);
     // println!("Link: {}", ajou);
 
+    // Blocking NON-ASYNC
     let client = reqwest::blocking::Client::builder()
         .danger_accept_invalid_certs(true)
         .build()?;
@@ -73,6 +73,10 @@ pub fn html_parse(_nums: Option<usize>) -> Result<Vec<Notice>, reqwest::Error> {
         }
         // println!("id: {}, title: {}, link: {}, date: {}, writer: {}", id, title, link, date, writer);
 
+        let useless = " 자세히 보기".to_string();
+        if title.contains(&useless) {
+            title = title.replace(&useless, "");
+        }
         notices[index].id = id;
         notices[index].title = title;
         notices[index].link = link;

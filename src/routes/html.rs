@@ -1,20 +1,18 @@
 #![allow(proc_macro_derive_resolution_fallback)]
 
+use crate::utils::parse::html_parse;
 use rocket_contrib::templates::Template;
 use serde::Serialize;
 
-#[derive(Serialize)]
-struct Context {
-    first_name: String,
-    last_name: String,
-}
+#[get("/front/<nums>")]
+pub fn front_test(nums: usize) -> Template {
+    let notices = html_parse(Some(nums)).unwrap();
 
-#[get("/front")]
-pub fn front_test() -> Template {
-    let context = Context {
-        first_name: String::from("First"),
-        last_name: String::from("Last"),
-    };
+    let context = json!({
+        "notices": notices,
+        "first": "first",
+        "last": "last",
+    });
 
     Template::render("home", context)
 }

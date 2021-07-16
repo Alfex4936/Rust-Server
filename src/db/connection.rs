@@ -11,6 +11,7 @@ use rocket::http::Status;
 use rocket::request::{self, FromRequest};
 use rocket::{Outcome, Request, State};
 use std::env;
+
 pub type Pool = r2d2::Pool<ConnectionManager<MysqlConnection>>;
 
 // pub const DATABASE_FILE: &'static str = env!("DATABASE_URL");

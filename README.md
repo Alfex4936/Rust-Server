@@ -10,9 +10,12 @@ tests/ : unittest
 
 # Endpoints
 
-## GET /front
+## GET /front/<nums>
 프론트 엔드 테스트
-![error](https://user-images.githubusercontent.com/2356749/125876171-5077da68-ae4e-4770-a72a-d2d5901ac65b.png)
+
+숫자에 맞게 공지사항을 파싱해서 HTML에 전달
+
+![error](https://user-images.githubusercontent.com/2356749/125958043-89964bf4-e2e8-408c-8978-7a4321a781e9.png)
 
 ## GET /db
 MySQL 연동 테스트
