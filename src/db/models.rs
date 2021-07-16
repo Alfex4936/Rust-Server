@@ -28,9 +28,9 @@ impl Default for Notice {
 #[table_name = "ajou_sched"]
 pub struct Schedule {
     pub id: i32,
-    pub content: String,
     pub start_date: String,
     pub end_date: String,
+    pub content: String,
 }
 
 // impl Schedule {

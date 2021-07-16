@@ -3,13 +3,11 @@ use crate::db::connection::Conn;
 use crate::db::models::Notice;
 use crate::db::models::Schedule;
 use crate::db::query;
-use std::io;
 
 use crate::utils::parse::html_parse;
 use rocket::http::Status;
 use rocket_contrib::json::Json;
 use serde_json::Value;
-use tokio::task;
 
 #[get("/hello")]
 pub fn hello() -> Json<Notice> {

@@ -2,7 +2,6 @@
 
 #[macro_use]
 extern crate rocket;
-#[macro_use]
 extern crate rocket_contrib;
 
 #[macro_use]
@@ -14,20 +13,24 @@ extern crate r2d2_diesel;
 
 #[macro_use]
 extern crate serde_derive;
-
+use rocket_contrib::templates::Template;
 mod db;
 mod routes;
 mod utils;
 
 pub fn rocket() -> rocket::Rocket {
-    rocket::ignite().manage(db::connection::init_pool()).mount(
-        "/api",
-        routes![
-            routes::notice::hello,
-            routes::notice::db_test,
-            routes::notice::notice_test,
-        ],
-    )
+    rocket::ignite()
+        .manage(db::connection::init_pool())
+        .mount(
+            "/api",
+            routes![
+                routes::notice::hello,
+                routes::notice::db_test,
+                routes::notice::notice_test,
+                routes::html::front_test,
+            ],
+        )
+        .attach(Template::fairing())
 }
 
 use diesel::result::Error;
