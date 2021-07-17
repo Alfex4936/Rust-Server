@@ -6,3 +6,13 @@ diesel::table! {
         content -> Varchar,
     }
 }
+
+diesel::table! {
+    ajou_notices (id) {
+        id -> Integer,
+        title -> Varchar,
+        date -> Varchar,
+        link -> Varchar,
+        writer -> Varchar,
+    }
+}

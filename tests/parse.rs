@@ -154,7 +154,6 @@ mod test {
 
     #[tokio::test]
     async fn html_parse() -> Result<(), reqwest::Error> {
-        use arr_macro::arr;
         use reqwest::header::USER_AGENT;
         use scraper::{Html, Selector};
 
@@ -183,9 +182,10 @@ mod test {
             "https://www.ajou.ac.kr/kr/ajou/notice.do?mode=list&article.offset=0&articleLimit="
                 .to_string();
 
-        let nums = "10".to_string();
+        let nums_int = 5;
+        let nums_str = nums_int.to_string();
 
-        ajou.push_str(&nums);
+        ajou.push_str(&nums_str);
 
         let client = reqwest::Client::builder()
             .danger_accept_invalid_certs(true)
@@ -207,7 +207,7 @@ mod test {
         let dates = Selector::parse("span.b-date").unwrap();
         let writers = Selector::parse("span.b-writer").unwrap();
 
-        let mut notices: [Notice; 10] = arr![Notice::default(); 10];
+        let mut notices = vec![Notice::default(); nums_int];
 
         let mut id_elements = document.select(&ids);
         let mut title_elements = document.select(&titles);
@@ -215,7 +215,7 @@ mod test {
         let mut writer_elements = document.select(&writers);
 
         // struct Notice
-        for index in 0..10 {
+        for index in 0..nums_int {
             let id_element = id_elements.next().unwrap();
             let id = id_element.text().collect::<Vec<_>>()[0]
                 .trim() // " 12345 "

@@ -1,11 +1,13 @@
 #![allow(proc_macro_derive_resolution_fallback)]
 
+use crate::db::schema::ajou_notices;
 use crate::db::schema::ajou_sched;
 // use diesel::prelude::*;
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Queryable, AsChangeset, Serialize, Deserialize, Debug, Clone)]
+#[table_name = "ajou_notices"]
 pub struct Notice {
-    pub id: u64,
+    pub id: i32,
     pub title: String,
     pub date: String,
     pub link: String,

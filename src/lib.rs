@@ -16,6 +16,8 @@ extern crate serde_derive;
 #[macro_use]
 extern crate serde_json;
 
+extern crate chrono;
+
 use diesel::result::Error;
 use rocket::http::Status;
 use rocket_contrib::templates::Template;
@@ -33,6 +35,7 @@ pub fn rocket() -> rocket::Rocket {
                 routes::notice::hello,
                 routes::notice::db_test,
                 routes::notice::notice_test,
+                routes::notice::last_notice_test,
                 routes::html::front_test,
             ],
         )

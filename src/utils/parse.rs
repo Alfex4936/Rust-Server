@@ -2,7 +2,7 @@ use crate::db::models::Notice;
 use reqwest::header::USER_AGENT;
 use scraper::{Html, Selector};
 
-pub fn html_parse(_nums: Option<usize>) -> Result<Vec<Notice>, reqwest::Error> {
+pub fn notice_parse(_nums: Option<usize>) -> Result<Vec<Notice>, reqwest::Error> {
     let mut ajou =
         "https://www.ajou.ac.kr/kr/ajou/notice.do?mode=list&article.offset=0&articleLimit="
             .to_string();
@@ -47,7 +47,7 @@ pub fn html_parse(_nums: Option<usize>) -> Result<Vec<Notice>, reqwest::Error> {
         let id_element = id_elements.next().unwrap();
         let id = id_element.text().collect::<Vec<_>>()[0]
             .trim() // " 12345 "
-            .parse::<u64>()
+            .parse::<i32>()
             .unwrap();
 
         let date_element = date_elements.next().unwrap();

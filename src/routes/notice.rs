@@ -3,8 +3,10 @@ use crate::db::connection::Conn;
 use crate::db::models::Notice;
 use crate::db::models::Schedule;
 use crate::db::query;
-use crate::utils::parse::html_parse;
+use crate::utils::parse::notice_parse;
 
+use chrono::prelude::*;
+use chrono::Duration;
 use rocket::http::Status;
 use rocket_contrib::json::Json;
 use serde_json::Value;
@@ -34,9 +36,24 @@ pub fn db_test(conn: Conn) -> Result<Json<Vec<Schedule>>, Status> {
     result
 }
 
-#[post("/notice", format = "json", data = "<kakao>")]
-pub fn notice_test(kakao: Json<Value>) -> Result<Json<Vec<Notice>>, Status> {
+#[post("/notice", format = "json", data = "<_kakao>")]
+pub fn notice_test(_kakao: Json<Value>) -> Result<Json<Vec<Notice>>, Status> {
     // println!("{}", kakao["userRequest"]["utterance"].as_str().unwrap()); // 발화문
-    let result = html_parse(Some(7)).unwrap();
+    let result = notice_parse(Some(7)).unwrap();
     Ok(Json(result))
+}
+
+#[post("/yesterday", format = "json", data = "<_kakao>")]
+pub fn last_notice_test(_kakao: Json<Value>, conn: Conn) -> Result<Json<Vec<Notice>>, Status> {
+    // println!("{}", kakao["userRequest"]["utterance"].as_str().unwrap()); // 발화문
+    let date = Local::now() - Duration::days(1);
+    let date_str = date.format("%y.%m.%d").to_string();
+    // %y : The proleptic Gregorian year modulo 100, zero-padded to 2 digits.
+
+    // println!("What is {}", date_str);
+
+    let result = query::get_notices(&conn, date_str)
+        .map(|notice| Json(notice))
+        .map_err(|error| crate::error_status(error));
+    result
 }
