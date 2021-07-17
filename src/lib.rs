@@ -20,6 +20,7 @@ extern crate chrono;
 
 use diesel::result::Error;
 use rocket::http::Status;
+use rocket_contrib::serve::StaticFiles;
 use rocket_contrib::templates::Template;
 
 mod db;
@@ -37,8 +38,10 @@ pub fn rocket() -> rocket::Rocket {
                 routes::notice::notice_test,
                 routes::notice::last_notice_test,
                 routes::html::front_test,
+                routes::html::just_test,
             ],
         )
+        .mount("/", StaticFiles::from("src/templates"))
         .attach(Template::fairing())
 }
 

@@ -43,3 +43,27 @@ HTML 파싱
     },
 ]
 ```
+
+## POST /yesterday
+```sql
+SELECT * FROM notices WHERE date = ? ORDER BY id DESC
+```
+=> query
+```json
+[
+    {
+        "id": 11111,
+        "title": "제목1",
+        "date": "21.07.15",
+        "link": "링크1",
+        "writer": "글쓴이1"
+    },
+    {
+        "id": 11110,
+        "title": "제목2",
+        "date": "21.07.15",
+        "link": "링크2",
+        "writer": "글쓴이2"
+    },
+]
+```

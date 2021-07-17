@@ -3,7 +3,7 @@ use crate::db::connection::Conn;
 use crate::db::models::Notice;
 use crate::db::models::Schedule;
 use crate::db::query;
-use crate::utils::parse::notice_parse;
+use crate::utils::parser::notice_parse;
 
 use chrono::prelude::*;
 use chrono::Duration;
