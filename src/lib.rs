@@ -31,10 +31,11 @@ pub fn rocket() -> rocket::Rocket {
     rocket::ignite()
         .manage(db::connection::init_pool())
         .mount(
-            "/api",
+            "/v1",
             routes![
                 routes::notice::hello,
                 routes::notice::db_test,
+                routes::notice::get_notices,
                 routes::notice::notice_test,
                 routes::notice::last_notice_test,
                 routes::html::front_test,

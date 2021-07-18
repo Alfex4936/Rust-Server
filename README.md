@@ -4,20 +4,20 @@ Rust studies
 
 # Structure
 
-src/routes/ : api
+src/routes/ : endpoints
 
 tests/ : unittest
 
 # Endpoints
 
-## GET /front/<nums>
+## GET `/front/<nums>`
 프론트 엔드 테스트
 
 숫자에 맞게 공지사항을 파싱해서 HTML에 전달
 
 ![error](https://user-images.githubusercontent.com/2356749/125958043-89964bf4-e2e8-408c-8978-7a4321a781e9.png)
 
-## GET /db
+## GET `/db`
 MySQL 연동 테스트
 ```json
 [
@@ -30,7 +30,7 @@ MySQL 연동 테스트
 ]
 ```
 
-## POST /notice
+## POST `/notice`
 HTML 파싱
 ```json
 [
@@ -44,7 +44,7 @@ HTML 파싱
 ]
 ```
 
-## POST /yesterday
+## POST `/yesterday`
 ```sql
 SELECT * FROM notices WHERE date = ? ORDER BY id DESC
 ```

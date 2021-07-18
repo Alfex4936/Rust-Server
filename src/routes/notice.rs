@@ -36,6 +36,13 @@ pub fn db_test(conn: Conn) -> Result<Json<Vec<Schedule>>, Status> {
     result
 }
 
+#[get("/notice/<nums>")]
+pub fn get_notices(nums: usize) -> Result<Json<Vec<Notice>>, Status> {
+    // println!("{}", kakao["userRequest"]["utterance"].as_str().unwrap()); // 발화문
+    let result = notice_parse(Some(nums)).unwrap();
+    Ok(Json(result))
+}
+
 #[post("/notice", format = "json", data = "<_kakao>")]
 pub fn notice_test(_kakao: Json<Value>) -> Result<Json<Vec<Notice>>, Status> {
     // println!("{}", kakao["userRequest"]["utterance"].as_str().unwrap()); // 발화문

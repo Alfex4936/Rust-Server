@@ -68,8 +68,8 @@ pub fn notice_parse(_nums: Option<usize>) -> Result<Vec<Notice>, reqwest::Error>
         // Check duplication. title: [writer] blah -> title: [blah]
         let dup = "[".to_string() + &writer + "]";
         if title.contains(&dup) {
-            title.replace_range(0..dup.len(), "");
-            title = title.trim().to_string();
+            title = title.replace(&dup, "");
+            // title.replace_range(0..dup.len(), "");
         }
         // println!("id: {}, title: {}, link: {}, date: {}, writer: {}", id, title, link, date, writer);
 
@@ -77,6 +77,11 @@ pub fn notice_parse(_nums: Option<usize>) -> Result<Vec<Notice>, reqwest::Error>
         if title.contains(&useless) {
             title = title.replace(&useless, "");
         }
+
+        title = title.trim().to_string();
+
+        // title.retain(|c| !r#"~「」"#.contains(c));
+
         notices[index].id = id;
         notices[index].title = title;
         notices[index].link = link;
