@@ -1,6 +1,6 @@
 # Rocket + MySQL + HTML
 
-Rust studies
+카카오톡 챗봇 + Backend + Frontend 프로젝트 in Rust
 
 # Structure
 
@@ -94,7 +94,7 @@ fn result_json() {
 }
 ```
 => 
-```json
+```yaml
 {
     "template": {
         "outputs": [
