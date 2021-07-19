@@ -15,6 +15,7 @@ extern crate r2d2_diesel;
 extern crate serde_derive;
 #[macro_use]
 extern crate serde_json;
+extern crate erased_serde;
 
 extern crate chrono;
 

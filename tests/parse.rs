@@ -157,7 +157,7 @@ mod test {
         use reqwest::header::USER_AGENT;
         use scraper::{Html, Selector};
 
-        #[derive(Debug)]
+        #[derive(Clone, Debug)]
         struct Notice {
             id: u64,
             title: String,
