@@ -1,0 +1,38 @@
+{
+    "template": {
+        "outputs": [
+            {
+                "listCard": {
+                    "buttons": [
+                        {
+                            "action": "phone",
+                            "label": "msg",
+                            "phoneNumber": "010-1234-5678"
+                        },
+                        {
+                            "action": "share",
+                            "label": "msg"
+                        }
+                    ],
+                    "header": {
+                        "title": "title"
+                    },
+                    "items": [
+                        {
+                            "description": "설명",
+                            "title": "제목"
+                        }
+                    ]
+                }
+            }
+        ],
+        "quickReplies": [
+            {
+                "action": "message",
+                "label": "라벨",
+                "messageText": "메시지"
+            }
+        ]
+    },
+    "version": "2.0"
+}

@@ -1,21 +1,6 @@
-/* Constructs below json
-
-{
-    "buttons": [
-        {
-            "label": "CALL LABEL",
-            "action": "phone",
-            "phoneNumber": "0",
-            "messageText": "MESSAGE"
-        },
-        {
-            "label": "label",
-            "action": "share"
-        }
-    ]
-}
-*/
+use crate::kakao_json::buttons::*;
 use serde::Serialize;
+use serde_json::Value;
 
 /***** Items *****/
 #[derive(Serialize)]
@@ -127,9 +112,140 @@ impl QuickReply {
 }
 /***** Quick Reply *****/
 
+/***** Extra *****/
+#[derive(Serialize)]
+pub struct Header {
+    header: Title,
+}
+
+#[derive(Serialize)]
+pub struct Title {
+    title: String,
+}
+
+impl Header {
+    fn new(_title: String) -> Self {
+        Header {
+            header: Title { title: _title },
+        }
+    }
+}
+
+/***** Extra *****/
+
+/***** Main *****/
+#[derive(Serialize)]
+pub struct Template {
+    template: Outputs,
+    version: String,
+}
+
+impl Template {
+    fn new() -> Self {
+        Template {
+            template: Outputs::new(),
+            version: "2.0".to_string(),
+        }
+    }
+
+    fn add_output(&mut self, output: Value) {
+        self.template.outputs.push(output);
+    }
+
+    fn add_qr(&mut self, qr: QuickReply) {
+        self.template.quick_replies.push(qr);
+    }
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Outputs {
+    outputs: Vec<Value>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    quick_replies: Vec<QuickReply>,
+}
+
+impl Outputs {
+    fn new() -> Self {
+        Outputs {
+            outputs: Vec::new(),
+            quick_replies: Vec::<QuickReply>::new(),
+        }
+    }
+}
+
+/***** Main *****/
+
+/***** Response *****/
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ListCard {
+    list_card: ListCardContent,
+}
+
+#[derive(Serialize)]
+pub struct ListCardContent {
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    buttons: Vec<Box<dyn erased_serde::Serialize>>,
+    header: Title, // 필수
+    // #[serde(skip_serializing_if = "Vec::is_empty")]
+    items: Vec<ListItem>, // 필수
+}
+
+impl ListCard {
+    fn new(_header: String) -> ListCard {
+        ListCard {
+            list_card: ListCardContent::new(_header),
+        }
+    }
+
+    fn add_button(&mut self, button: Box<dyn erased_serde::Serialize>) {
+        self.list_card.buttons.push(button);
+    }
+
+    fn add_item(&mut self, item: ListItem) {
+        self.list_card.items.push(item);
+    }
+}
+
+impl ListCardContent {
+    fn new(_title: String) -> ListCardContent {
+        ListCardContent {
+            buttons: Vec::new(),
+            header: Title { title: _title },
+            items: Vec::new(),
+        }
+    }
+}
+
+/***** Response *****/
+
 #[cfg(test)]
 mod test {
     use super::*;
+
+    #[test]
+    fn result_json() {
+        let mut result = Template::new();
+        result.add_qr(QuickReply::new(
+            "message".to_string(),
+            "라벨".to_string(),
+            "메시지".to_string(),
+        ));
+
+        let mut list_card = ListCard::new("title".to_string());
+        list_card.add_button(Box::new(
+            CallButton::new("msg".to_string()).set_number("010-1234-5678".to_string()),
+        ));
+
+        list_card.add_button(Box::new(ShareButton::new("msg".to_string())));
+
+        list_card.add_item(ListItem::new("제목".to_string()).set_desc("설명".to_string()));
+
+        result.add_output(json!(list_card));
+
+        println!("Result: {}", serde_json::to_string(&result).expect("Woah"));
+    }
 
     #[test]
     fn list_item_json() {
@@ -142,8 +258,14 @@ mod test {
         );
         result.push(ListItem::new("제목".to_string()).set_desc("설명".to_string()));
 
+        let header = Header::new("tittlelel".to_string());
+
         // println!("{:?}", json!(result));
-        println!("{}", serde_json::to_string(&result).expect("Woah"));
+        println!(
+            "listItem: {}",
+            serde_json::to_string(&result).expect("Woah")
+        );
+        println!("header: {}", serde_json::to_string(&header).expect("Woah"));
     }
 
     #[test]

@@ -20,7 +20,7 @@ use serde::Serialize;
 /***** Buttons *****/
 #[allow(patterns_in_fns_without_body)]
 pub trait Button: Serialize {
-    fn new(msg: Option<String>) -> Self;
+    fn new(label: String) -> Self;
     fn set_label(mut self, label: String) -> Self;
     fn set_msg(mut self, msg: String) -> Self;
 }
@@ -28,15 +28,17 @@ pub trait Button: Serialize {
 #[derive(Serialize)]
 pub struct ButtonJSON {
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    buttons: Vec<Box<dyn erased_serde::Serialize>>,
+    pub buttons: Vec<Box<dyn erased_serde::Serialize>>,
 }
 
 impl ButtonJSON {
-    fn new() -> Self {
+    pub fn new() -> Self {
         ButtonJSON {
             buttons: Vec::new(),
         }
     }
+
+    // pub fn add_button(&mut self, button: Box<dyn erased_serde::Serialize>) {}
 }
 
 #[derive(Serialize)]
@@ -49,20 +51,20 @@ pub struct CallButton {
     message_text: Option<String>,
 }
 
-// impl CallButton {
-//     fn set_label(mut self, label: String) -> Self {
-//         self.label = label;
-//         self
-//     }
-// }
+impl CallButton {
+    pub fn set_number(mut self, number: String) -> Self {
+        self.phone_number = number;
+        self
+    }
+}
 
 impl Button for CallButton {
-    fn new(msg: Option<String>) -> Self {
+    fn new(label: String) -> Self {
         CallButton {
-            label: "label".to_string(),
+            label: label,
             action: "phone".to_string(),
             phone_number: "0".to_string(),
-            message_text: msg,
+            message_text: None,
         }
     }
 
@@ -87,11 +89,11 @@ pub struct MsgButton {
 }
 
 impl Button for MsgButton {
-    fn new(msg: Option<String>) -> Self {
+    fn new(label: String) -> Self {
         MsgButton {
-            label: "label".to_string(),
+            label: label,
             action: "message".to_string(),
-            message_text: msg,
+            message_text: None,
         }
     }
 
@@ -116,11 +118,11 @@ pub struct ShareButton {
 }
 
 impl Button for ShareButton {
-    fn new(msg: Option<String>) -> Self {
+    fn new(label: String) -> Self {
         ShareButton {
-            label: "label".to_string(),
+            label: label,
             action: "share".to_string(),
-            message_text: msg,
+            message_text: None,
         }
     }
 
@@ -146,12 +148,19 @@ mod test {
     fn kakao_json() {
         // let mut buttons: Vec<Box<Button + 'static>> = Vec::new();
         let mut result = ButtonJSON::new();
+        let bbox = Box::new(
+            CallButton::new("LABEL".to_string())
+                .set_label("CALL LABEL".to_string())
+                .set_msg("MESSAGE".to_string()),
+        );
         result.buttons.push(Box::new(
-            CallButton::new(None)
+            CallButton::new("LABEL".to_string())
                 .set_label("CALL LABEL".to_string())
                 .set_msg("MESSAGE".to_string()),
         ));
-        result.buttons.push(Box::new(ShareButton::new(None)));
+        result
+            .buttons
+            .push(Box::new(ShareButton::new("LABEL".to_string())));
 
         println!("{:?}", json!(result));
         println!("{}", serde_json::to_string(&result).expect("Woah"));
