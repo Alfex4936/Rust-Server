@@ -67,3 +67,70 @@ SELECT * FROM notices WHERE date = ? ORDER BY id DESC
     },
 ]
 ```
+
+## 카카오 챗봇 `ListCard`
+```rust
+#[test]
+fn result_json() {
+    let mut result = Template::new();
+    result.add_qr(QuickReply::new(
+        "message".to_string(),
+        "라벨".to_string(),
+        "메시지".to_string(),
+    ));
+
+    let mut list_card = ListCard::new("title".to_string());
+    list_card.add_button(Box::new(
+        CallButton::new("msg".to_string()).set_number("010-1234-5678".to_string()),
+    ));
+
+    list_card.add_button(Box::new(ShareButton::new("msg".to_string())));
+
+    list_card.add_item(ListItem::new("제목".to_string()).set_desc("설명".to_string()));
+
+    result.add_output(json!(list_card));
+
+    println!("Result: {}", serde_json::to_string(&result).expect("Woah"));
+}
+```
+=> 
+```json
+{
+    "template": {
+        "outputs": [
+            {
+                "listCard": {
+                    "buttons": [
+                        {
+                            "action": "phone",
+                            "label": "msg",
+                            "phoneNumber": "010-1234-5678"
+                        },
+                        {
+                            "action": "share",
+                            "label": "msg"
+                        }
+                    ],
+                    "header": {
+                        "title": "title"
+                    },
+                    "items": [
+                        {
+                            "description": "설명",
+                            "title": "제목"
+                        }
+                    ]
+                }
+            }
+        ],
+        "quickReplies": [
+            {
+                "action": "message",
+                "label": "라벨",
+                "messageText": "메시지"
+            }
+        ]
+    },
+    "version": "2.0"
+}
+```
