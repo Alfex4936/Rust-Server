@@ -1,3 +1,20 @@
+/* Constructs below json
+
+{
+    "buttons": [
+        {
+            "label": "CALL LABEL",
+            "action": "phone",
+            "phoneNumber": "0",
+            "messageText": "MESSAGE"
+        },
+        {
+            "label": "label",
+            "action": "share"
+        }
+    ]
+}
+*/
 use serde::Serialize;
 
 /***** Buttons *****/

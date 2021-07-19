@@ -25,6 +25,7 @@ use rocket_contrib::serve::StaticFiles;
 use rocket_contrib::templates::Template;
 
 mod db;
+mod kakao_json;
 mod routes;
 mod utils;
 
