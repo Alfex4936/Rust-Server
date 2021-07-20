@@ -110,6 +110,44 @@ impl Button for MsgButton {
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
+pub struct LinkButton {
+    label: String,
+    action: String,
+    web_link_url: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    message_text: Option<String>,
+}
+
+impl LinkButton {
+    pub fn set_link(mut self, link: String) -> Self {
+        self.web_link_url = link;
+        self
+    }
+}
+
+impl Button for LinkButton {
+    fn new(label: String) -> Self {
+        LinkButton {
+            label: label,
+            action: "webLink".to_string(),
+            web_link_url: "".to_string(),
+            message_text: None,
+        }
+    }
+
+    fn set_label(mut self, label: String) -> Self {
+        self.label = label;
+        self
+    }
+
+    fn set_msg(mut self, msg: String) -> Self {
+        self.message_text = Some(msg);
+        self
+    }
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ShareButton {
     label: String,
     action: String,
@@ -141,7 +179,6 @@ impl Button for ShareButton {
 
 #[cfg(test)]
 mod test {
-    // Note this useful idiom: importing names from outer (for mod tests) scope.
     use super::*;
 
     #[test]

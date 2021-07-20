@@ -5,22 +5,39 @@
                 "listCard": {
                     "buttons": [
                         {
-                            "action": "phone",
-                            "label": "msg",
-                            "phoneNumber": "010-1234-5678"
+                            "action": "share",
+                            "label": "공유하기"
                         },
                         {
-                            "action": "share",
-                            "label": "msg"
+                            "action": "webLink",
+                            "label": "ajouLink",
+                            "webLinkUrl": "https://"
                         }
                     ],
                     "header": {
-                        "title": "title"
+                        "title": "21.07.20) 오늘 공지"
                     },
                     "items": [
                         {
-                            "description": "설명",
-                            "title": "제목"
+                            "description": "대학일 자리플러스센터 07.20",
+                            "link": {
+                                "web": "?mode=view&articleNo=111782&article.offset=0&articleLimit=30"
+                            },
+                            "title": "7월 3주차 이공계인력중개센터 채용 정보"
+                        },
+                        {
+                            "description": "입학사정센터 07.20",
+                            "link": {
+                                "web": "?mode=view&articleNo=111780&article.offset=0&articleLimit=30"
+                            },
+                            "title": "2021년 아주 희망 기숙사비 지원 장학생 모집 ~7/23까지"
+                        },
+                        {
+                            "description": "학생지원팀 07.20",
+                            "link": {
+                                "web": "?mode=view&articleNo=111779&article.offset=0&articleLimit=30"
+                            },
+                            "title": "[교외장학] 2021학년도 2학기 김수정장학 장학생 선발 공고"
                         }
                     ]
                 }
@@ -29,8 +46,13 @@
         "quickReplies": [
             {
                 "action": "message",
-                "label": "라벨",
-                "messageText": "메시지"
+                "label": "오늘",
+                "messageText": "오늘 공지 보여줘"
+            },
+            {
+                "action": "message",
+                "label": "어제",
+                "messageText": "어제 공지 보여줘"
             }
         ]
     },

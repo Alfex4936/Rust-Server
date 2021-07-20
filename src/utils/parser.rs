@@ -78,6 +78,11 @@ pub fn notice_parse(_nums: Option<usize>) -> Result<Vec<Notice>, reqwest::Error>
             title = title.replace(&useless, "");
         }
 
+        let useless = "(재공지)".to_string();
+        if title.contains(&useless) {
+            title = title.replace(&useless, "");
+        }
+
         title = title.trim().to_string();
 
         // title.retain(|c| !r#"~「」"#.contains(c));

@@ -1,6 +1,10 @@
+use crate::db::models::Notice;
 use crate::kakao_json::buttons::*;
+use crate::utils::parser::notice_parse;
+use chrono::prelude::Local;
 use serde::Serialize;
 use serde_json::Value;
+use unicode_segmentation::UnicodeSegmentation;
 
 /***** Items *****/
 #[derive(Serialize)]
@@ -96,17 +100,22 @@ pub struct QuickReply {
 }
 
 impl QuickReply {
-    fn new(_action: String, _label: String, _msg: String) -> Self {
+    fn new(_label: String, _msg: String) -> Self {
         QuickReply {
             label: _label,
             message_text: _msg,
-            action: _action,
+            action: "message".to_string(),
             block_id: None,
         }
     }
 
     fn set_block_id(mut self, id: String) -> Self {
         self.block_id = Some(id);
+        self
+    }
+
+    fn set_action(mut self, _action: String) -> Self {
+        self.action = _action;
         self
     }
 }
@@ -206,6 +215,10 @@ impl ListCard {
     fn add_item(&mut self, item: ListItem) {
         self.list_card.items.push(item);
     }
+
+    fn build(self) -> Value {
+        json!(self)
+    }
 }
 
 impl ListCardContent {
@@ -225,24 +238,82 @@ mod test {
     use super::*;
 
     #[test]
-    fn result_json() {
+    fn listcard_json() {
         let mut result = Template::new();
         result.add_qr(QuickReply::new(
-            "message".to_string(),
-            "라벨".to_string(),
-            "메시지".to_string(),
+            "오늘".to_string(),
+            "오늘 공지 보여줘".to_string(),
+        ));
+        result.add_qr(QuickReply::new(
+            "어제".to_string(),
+            "어제 공지 보여줘".to_string(),
         ));
 
-        let mut list_card = ListCard::new("title".to_string());
-        list_card.add_button(Box::new(
-            CallButton::new("msg".to_string()).set_number("010-1234-5678".to_string()),
-        ));
+        let mut notices = notice_parse(Some(30)).unwrap();
+        let today = Local::now().format("%y.%m.%d").to_string(); // "21.07.20"
 
-        list_card.add_button(Box::new(ShareButton::new("msg".to_string())));
+        let mut list_card = ListCard::new(format!("{}) 오늘 공지", today));
+        // list_card.add_button(Box::new(
+        //     CallButton::new("msg".to_string()).set_number("010-1234-5678".to_string()),
+        // ));
 
-        list_card.add_item(ListItem::new("제목".to_string()).set_desc("설명".to_string()));
+        list_card.add_button(Box::new(ShareButton::new("공유하기".to_string())));
 
-        result.add_output(json!(list_card));
+        // notices.iter().position(|&n| n.date.ne(&today)).unwrap();
+
+        notices = notices
+            .into_iter()
+            .filter(|notice| notice.date.eq(&today))
+            .collect();
+
+        let mut label: String = "".to_string();
+
+        if notices.len() > 5 {
+            label = format!("{}개 더보기", notices.len() - 5);
+            list_card.add_button(Box::new(MsgButton::new(label)));
+            notices.resize(5, Notice::default());
+        } else {
+            list_card.add_button(Box::new(
+                LinkButton::new("ajouLink".to_string()).set_link("https://".to_string()),
+            ));
+        }
+
+        if notices.len() == 0 {
+            list_card.add_item(
+                ListItem::new("공지가 없습니다!".to_string()).set_image(
+                    "http://k.kakaocdn.net/dn/APR96/btqqH7zLanY/kD5mIPX7TdD2NAxgP29cC0/1x1.jpg"
+                        .to_string(),
+                ),
+            );
+        } else {
+            for notice in notices.iter_mut() {
+                if notice.title.graphemes(true).count() > 35 {
+                    notice.title =
+                        UnicodeSegmentation::grapheme_indices(notice.title.as_str(), true)
+                            .enumerate()
+                            .filter(|&(i, _)| i < 32)
+                            .map(|(_, (_, s))| s)
+                            .collect::<Vec<&str>>()
+                            .join("")
+                            + "...";
+                }
+                let description = format!(
+                    "{} {}",
+                    notice.writer,
+                    notice.date[notice.date.len() - 5..].to_string()
+                );
+
+                list_card.add_item(
+                    ListItem::new((*notice.title).to_string())
+                        .set_desc(description)
+                        .set_link((*notice.link).to_string()),
+                );
+            }
+        }
+
+        // list_card.add_item(ListItem::new("제목".to_string()).set_desc("설명".to_string()));
+
+        result.add_output(list_card.build()); // moved list_card's ownership
 
         println!("Result: {}", serde_json::to_string(&result).expect("Woah"));
     }
@@ -272,18 +343,11 @@ mod test {
     fn qr_json() {
         let mut result = QRJson::new();
 
-        result.push(QuickReply::new(
-            "message".to_string(),
-            "label".to_string(),
-            "msg".to_string(),
-        ));
+        result.push(QuickReply::new("label".to_string(), "msg".to_string()));
         result.push(
-            QuickReply::new(
-                "block".to_string(),
-                "label2".to_string(),
-                "msg2".to_string(),
-            )
-            .set_block_id("123".to_string()),
+            QuickReply::new("label2".to_string(), "msg2".to_string())
+                .set_action("block".to_string())
+                .set_block_id("123".to_string()),
         );
 
         // println!("{:?}", json!(result));
