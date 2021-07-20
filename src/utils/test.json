@@ -45,3 +45,23 @@
         }
     ]
 }
+// SimpleText
+{
+    "template": {
+        "outputs": [
+            {
+                "simpleText": {
+                    "text": "심플 텍스트 테스트"
+                }
+            }
+        ],
+        "quickReplies": [
+            {
+                "action": "message",
+                "label": "빠른 응답",
+                "messageText": "빠른 응답 ㅋㅋ"
+            }
+        ]
+    },
+    "version": "2.0"
+}

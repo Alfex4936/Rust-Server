@@ -58,3 +58,133 @@
     },
     "version": "2.0"
 }
+// Multiple outputs
+{
+    "template": {
+        "outputs": [
+            {
+                "simpleText": {
+                    "text": "심플 텍스트 테스트"
+                }
+            },
+            {
+                "listCard": {
+                    "buttons": [
+                        {
+                            "action": "share",
+                            "label": "공유하기"
+                        },
+                        {
+                            "action": "webLink",
+                            "label": "ajouLink",
+                            "webLinkUrl": "https://"
+                        }
+                    ],
+                    "header": {
+                        "title": "21.07.20) 오늘 공지"
+                    },
+                    "items": [
+                        {
+                            "description": "교무팀 07.20",
+                            "link": {
+                                "web": "?mode=view&articleNo=111791&article.offset=0&articleLimit=30"
+                            },
+                            "title": "(학사과정)2021-2학기 국내대학 학점교류 신청 안내(2..."
+                        },
+                        {
+                            "description": "대학일자리플러스센터 07.20",
+                            "link": {
+                                "web": "?mode=view&articleNo=111782&article.offset=0&articleLimit=30"
+                            },
+                            "title": "7월 3주차 이공계인력중개센터 채용 정보"
+                        },
+                        {
+                            "description": "입학사정센터 07.20",
+                            "link": {
+                                "web": "?mode=view&articleNo=111780&article.offset=0&articleLimit=30"
+                            },
+                            "title": "2021년 아주 희망 기숙사비 지원 장학생 모집 ~7/23까지"
+                        },
+                        {
+                            "description": "학생지원팀 07.20",
+                            "link": {
+                                "web": "?mode=view&articleNo=111779&article.offset=0&articleLimit=30"
+                            },
+                            "title": "[교외장학] 2021학년도 2학기 김수정장학 장학생 선발 공고"
+                        }
+                    ]
+                }
+            }
+        ],
+        "quickReplies": [
+            {
+                "action": "message",
+                "label": "빠른 응답 1",
+                "messageText": "빠른 응답 1"
+            },
+            {
+                "action": "message",
+                "label": "빠른 응답 1",
+                "messageText": "빠른 응답 1"
+            }
+        ]
+    },
+    "version": "2.0"
+}
+// Carousel (BasicCard)
+{
+    "template": {
+        "outputs": [
+            {
+                "carousel": {
+                    "items": [
+                        {
+                            "thumbnail": {
+                                "fixedRatio": false,
+                                "imageUrl": "http://k.kakaocdn.net/dn/APR96/btqqH7zLanY/kD5mIPX7TdD2NAxgP29cC0/1x1.jpg"
+                            },
+                            "title": "0번"
+                        },
+                        {
+                            "thumbnail": {
+                                "fixedRatio": false,
+                                "imageUrl": "http://k.kakaocdn.net/dn/APR96/btqqH7zLanY/kD5mIPX7TdD2NAxgP29cC0/1x1.jpg"
+                            },
+                            "title": "1번"
+                        },
+                        {
+                            "thumbnail": {
+                                "fixedRatio": false,
+                                "imageUrl": "http://k.kakaocdn.net/dn/APR96/btqqH7zLanY/kD5mIPX7TdD2NAxgP29cC0/1x1.jpg"
+                            },
+                            "title": "2번"
+                        },
+                        {
+                            "thumbnail": {
+                                "fixedRatio": false,
+                                "imageUrl": "http://k.kakaocdn.net/dn/APR96/btqqH7zLanY/kD5mIPX7TdD2NAxgP29cC0/1x1.jpg"
+                            },
+                            "title": "3번"
+                        },
+                        {
+                            "thumbnail": {
+                                "fixedRatio": false,
+                                "imageUrl": "http://k.kakaocdn.net/dn/APR96/btqqH7zLanY/kD5mIPX7TdD2NAxgP29cC0/1x1.jpg"
+                            },
+                            "title": "4번"
+                        }
+                    ],
+                    "type": "basicCard"
+                }
+            }
+        ],
+        "quickReplies": [
+            {
+                "action": "message",
+                "label": "빠른 응답",
+                "messageText": "빠른 응답 ㅋㅋ"
+            }
+        ]
+    },
+    "version": "2.0"
+}
