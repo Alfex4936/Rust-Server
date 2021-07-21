@@ -18,13 +18,11 @@ pub fn front_test(nums: usize) -> Template {
 
 #[get("/test")]
 pub fn just_test() -> Template {
-    let notices = notice_parse(Some(1)).unwrap();
+    let notices = notice_parse(Some(15)).unwrap();
 
     let context = json!({
         "notices": notices,
-        "first": "first",
-        "last": "last",
     });
 
-    Template::render("test", context)
+    Template::render("ajou", context)
 }

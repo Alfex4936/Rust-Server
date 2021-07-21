@@ -26,22 +26,6 @@ pub trait Button: Serialize {
 }
 
 #[derive(Serialize)]
-pub struct ButtonJSON {
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub buttons: Vec<Box<dyn erased_serde::Serialize>>,
-}
-
-impl ButtonJSON {
-    pub fn new() -> Self {
-        ButtonJSON {
-            buttons: Vec::new(),
-        }
-    }
-
-    // pub fn add_button(&mut self, button: Box<dyn erased_serde::Serialize>) {}
-}
-
-#[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CallButton {
     label: String,
@@ -183,23 +167,16 @@ mod test {
 
     #[test]
     fn kakao_json() {
-        // let mut buttons: Vec<Box<Button + 'static>> = Vec::new();
-        let mut result = ButtonJSON::new();
-        let bbox = Box::new(
-            CallButton::new("LABEL".to_string())
-                .set_label("CALL LABEL".to_string())
-                .set_msg("MESSAGE".to_string()),
-        );
-        result.buttons.push(Box::new(
+        let mut buttons: Vec<Box<dyn erased_serde::Serialize>> = Vec::new();
+        buttons.push(Box::new(
             CallButton::new("LABEL".to_string())
                 .set_label("CALL LABEL".to_string())
                 .set_msg("MESSAGE".to_string()),
         ));
-        result
-            .buttons
-            .push(Box::new(ShareButton::new("LABEL".to_string())));
 
-        println!("{:?}", json!(result));
-        println!("{}", serde_json::to_string(&result).expect("Woah"));
+        buttons.push(Box::new(ShareButton::new("LABEL".to_string())));
+
+        // println!("{:?}", json!(result));
+        println!("{}", serde_json::to_string(&buttons).expect("Woah"));
     }
 }

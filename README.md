@@ -16,6 +16,7 @@ tests/ : unittest
 숫자에 맞게 공지사항을 파싱해서 HTML에 전달
 
 ![error](https://user-images.githubusercontent.com/2356749/125958043-89964bf4-e2e8-408c-8978-7a4321a781e9.png)
+![error](https://user-images.githubusercontent.com/2356749/126478657-ce2553e1-111a-4e6c-bd84-e3eac74cbf15.png)
 
 ## GET `/db`
 MySQL 연동 테스트

@@ -2,6 +2,8 @@ use crate::db::models::Notice;
 use reqwest::header::USER_AGENT;
 use scraper::{Html, Selector};
 
+const AJOU_LINK: &'static str = "https://www.ajou.ac.kr/kr/ajou/notice.do";
+
 pub fn notice_parse(_nums: Option<usize>) -> Result<Vec<Notice>, reqwest::Error> {
     let mut ajou =
         "https://www.ajou.ac.kr/kr/ajou/notice.do?mode=list&article.offset=0&articleLimit="
@@ -64,7 +66,7 @@ pub fn notice_parse(_nums: Option<usize>) -> Result<Vec<Notice>, reqwest::Error>
         let inner_a = title_element.select(&a_selector).next().unwrap();
 
         let mut title = inner_a.value().attr("title").unwrap().to_string();
-        let link = inner_a.value().attr("href").unwrap().to_string();
+        let link = AJOU_LINK.to_string() + inner_a.value().attr("href").unwrap();
         // Check duplication. title: [writer] blah -> title: [blah]
         let dup = "[".to_string() + &writer + "]";
         if title.contains(&dup) {
