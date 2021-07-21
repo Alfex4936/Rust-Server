@@ -12,20 +12,6 @@ pub trait Card: Serialize {
     fn build(&self) -> Value;
 }
 
-#[derive(Serialize)]
-pub struct CardJSON {
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub cards: Vec<Box<dyn erased_serde::Serialize>>,
-}
-
-impl CardJSON {
-    pub fn new() -> Self {
-        CardJSON { cards: Vec::new() }
-    }
-
-    // pub fn add_button(&mut self, button: Box<dyn erased_serde::Serialize>) {}
-}
-
 /***** BasicCard *****/
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -110,10 +96,15 @@ pub struct CommerceCard {
     description: String,
     price: i32,
     currency: String, // 필수
+    #[serde(skip_serializing_if = "Option::is_none")]
     discount: Option<i32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     discount_rate: Option<i32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     discounted_price: Option<i32>,
-    thumbnails: Vec<ThumbNail>,                     // 필수, 1개만 지원
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    thumbnails: Vec<ThumbNail>, // 필수, 1개만 지원
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     buttons: Vec<Box<dyn erased_serde::Serialize>>, // 필수
 }
 

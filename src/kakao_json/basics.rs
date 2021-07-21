@@ -450,6 +450,33 @@ mod test {
     }
 
     #[test]
+    fn carousel_commerce_card_json() {
+        let mut result = Template::new();
+        result.add_qr(QuickReply::new(
+            "빠른 응답".to_string(),
+            "빠른 응답 ㅋㅋ".to_string(),
+        ));
+
+        let mut carousel = Carousel::new().set_type(CommerceCard::id());
+
+        for i in 0..5 {
+            let commerce_card = CommerceCard::new()
+                .set_price(5000 + i)
+                .set_desc(format!("{} DESC", i))
+                .set_currency("WON".to_string())
+                .set_thumbnail(format!(
+                    "http://k.kakaocdn.net/dn/APR96/btqqH7zLanY/kD5mIPX7TdD2NAxgP29cC0/1x1.jpg"
+                ));
+
+            carousel.add_card(Box::new(commerce_card));
+        }
+
+        result.add_output(carousel.build());
+
+        println!("Result: {}", result.to_string());
+    }
+
+    #[test]
     fn listcard_json() {
         let mut result = Template::new();
         result.add_qr(QuickReply::new(
