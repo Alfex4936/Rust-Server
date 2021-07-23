@@ -42,6 +42,7 @@ pub fn rocket() -> rocket::Rocket {
                 routes::notice::last_notice_test,
                 routes::html::front_test,
                 routes::html::just_test,
+                routes::html::kakao_test,
             ],
         )
         .mount("/", StaticFiles::from("src/templates"))
