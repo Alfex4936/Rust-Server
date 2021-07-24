@@ -13,6 +13,14 @@ tests/ : unittest
 ## TODO
 카카오 챗봇 JSON 로컬에서 미리보는 사이트
 
+어떠한 방식으로? 1번 구현 후 2번 버전 시도가 나을 듯
+
+1. 자신의 JSON 데이터를 복사해서 입력하면 그걸 메시지로 변환 시키는 방식
+
+(여기서 발화 메시지는 json 해석 후 알맞는 형태로)
+
+2. 사이트 자체를 local에 받게한 후 실행 후 POST 방식
+
 ![gif](https://user-images.githubusercontent.com/2356749/126861335-a76586f7-8ac4-4725-a37b-10330e6d8794.gif)
 
 ## GET `/front/<nums>`
