@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Kakao</title>
     <link rel="stylesheet" href="/kakaotalk.css" />
+    <script src="/kakao.js" defer></script>
   </head>
   <body id="chat-screen">
     <main class="main-screen main-chat">
@@ -31,9 +32,13 @@
 
     <form class="reply">
       <div class="reply__column">
-        <input type="text" placeholder="메시지를 입력하세요..." />
+        <input
+          class="reply-input"
+          type="text"
+          placeholder="메시지를 입력하세요..."
+        />
         <i class="far fa-smile-wink fa-lg"></i>
-        <button>
+        <button type="submit">
           <i class="fas fa-arrow-up"></i>
         </button>
       </div>

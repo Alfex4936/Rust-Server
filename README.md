@@ -13,7 +13,7 @@ tests/ : unittest
 ## TODO
 카카오 챗봇 JSON 로컬에서 미리보는 사이트
 
-![image](https://user-images.githubusercontent.com/2356749/126797009-7650769a-2df4-41d9-b558-f0702cdd5deb.png)
+![gif](https://user-images.githubusercontent.com/2356749/126861335-a76586f7-8ac4-4725-a37b-10330e6d8794.gif)
 
 ## GET `/front/<nums>`
 프론트 엔드 테스트
