@@ -3,7 +3,8 @@ use crate::db::connection::Conn;
 use crate::db::models::Notice;
 use crate::db::models::Schedule;
 use crate::db::query;
-use crate::utils::parser::notice_parse;
+use crate::kakao_json::basics::Template;
+use crate::utils::parser::{check_type, notice_parse};
 
 use chrono::prelude::*;
 use chrono::Duration;
@@ -63,4 +64,16 @@ pub fn last_notice_test(_kakao: Json<Value>, conn: Conn) -> Result<Json<Vec<Noti
         .map(|notice| Json(notice))
         .map_err(|error| crate::error_status(error));
     result
+}
+
+#[post("/json", format = "json", data = "<kakao>")]
+pub fn json_test(kakao: Json<Value>) -> Result<Json<Template>, Status> {
+    // println!("{}", kakao["userRequest"]["utterance"].as_str().unwrap()); // 발화문
+
+    let json: Template = serde_json::from_str(&kakao.to_string()).unwrap();
+    for output in &json.template.outputs {
+        println!("{:#?}", output);
+        println!("Key: {}", check_type(output).unwrap());
+    }
+    Ok(Json(json))
 }

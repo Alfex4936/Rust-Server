@@ -19,6 +19,8 @@ tests/ : unittest
 
 (여기서 발화 메시지는 json 해석 후 알맞는 형태로)
 
+(Rust로 메시지 Deserialize 하고 형식에 맞는 HTML 코드 GET return?)
+
 2. 사이트 자체를 local에 받게한 후 실행 후 POST 방식
 
 ![gif](https://user-images.githubusercontent.com/2356749/126861335-a76586f7-8ac4-4725-a37b-10330e6d8794.gif)

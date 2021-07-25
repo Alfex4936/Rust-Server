@@ -40,6 +40,7 @@ pub fn rocket() -> rocket::Rocket {
                 routes::notice::get_notices,
                 routes::notice::notice_test,
                 routes::notice::last_notice_test,
+                routes::notice::json_test,
                 routes::html::front_test,
                 routes::html::just_test,
                 routes::html::kakao_test,

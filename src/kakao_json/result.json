@@ -265,3 +265,65 @@
     },
     "version": "2.0"
 }
+
+{
+    "template": {
+        "outputs": [
+            {
+                "simpleText": {
+                    "text": "심플 텍스트 테스트"
+                }
+            },
+            {
+                "carousel": {
+                    "items": [
+                        {
+                            "thumbnail": {
+                                "fixedRatio": false,
+                                "imageUrl": "http://k.kakaocdn.net/dn/APR96/btqqH7zLanY/kD5mIPX7TdD2NAxgP29cC0/1x1.jpg"
+                            },
+                            "title": "0번"
+                        },
+                        {
+                            "thumbnail": {
+                                "fixedRatio": false,
+                                "imageUrl": "http://k.kakaocdn.net/dn/APR96/btqqH7zLanY/kD5mIPX7TdD2NAxgP29cC0/1x1.jpg"
+                            },
+                            "title": "1번"
+                        },
+                        {
+                            "thumbnail": {
+                                "fixedRatio": false,
+                                "imageUrl": "http://k.kakaocdn.net/dn/APR96/btqqH7zLanY/kD5mIPX7TdD2NAxgP29cC0/1x1.jpg"
+                            },
+                            "title": "2번"
+                        },
+                        {
+                            "thumbnail": {
+                                "fixedRatio": false,
+                                "imageUrl": "http://k.kakaocdn.net/dn/APR96/btqqH7zLanY/kD5mIPX7TdD2NAxgP29cC0/1x1.jpg"
+                            },
+                            "title": "3번"
+                        },
+                        {
+                            "thumbnail": {
+                                "fixedRatio": false,
+                                "imageUrl": "http://k.kakaocdn.net/dn/APR96/btqqH7zLanY/kD5mIPX7TdD2NAxgP29cC0/1x1.jpg"
+                            },
+                            "title": "4번"
+                        }
+                    ],
+                    "type": "basicCard"
+                }
+            }
+        ],
+        "quickReplies": [
+            {
+                "action": "message",
+                "label": "빠른 응답",
+                "messageText": "빠른 응답 ㅋㅋ"
+            }
+        ]
+    },
+    "version": "2.0"
+}

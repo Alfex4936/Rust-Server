@@ -3,9 +3,231 @@ use crate::kakao_json::buttons::*;
 use crate::kakao_json::cards::*;
 use crate::utils::parser::notice_parse;
 use chrono::prelude::Local;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use unicode_segmentation::UnicodeSegmentation;
+
+/***** Items *****/
+#[derive(Serialize)]
+pub struct ItemJSON {
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    items: Vec<ListItem>,
+}
+
+impl ItemJSON {
+    fn new() -> Self {
+        ItemJSON { items: Vec::new() }
+    }
+
+    fn push(&mut self, item: ListItem) {
+        self.items.push(item);
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct Link {
+    pub web: String,
+}
+
+// Go 버전에서 ListItem, ListItemLink 합침
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ListItem {
+    title: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    description: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    image_url: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    link: Option<Link>,
+}
+
+impl ListItem {
+    pub fn new(_title: String) -> Self {
+        ListItem {
+            title: _title,
+            description: None,
+            image_url: None,
+            link: None,
+        }
+    }
+
+    pub fn set_desc(mut self, desc: String) -> Self {
+        self.description = Some(desc);
+        self
+    }
+
+    pub fn set_image(mut self, url: String) -> Self {
+        self.image_url = Some(url);
+        self
+    }
+
+    pub fn set_link(mut self, _url: String) -> Self {
+        self.link = Some(Link { web: _url });
+        self
+    }
+}
+/***** Items *****/
+
+/***** Quick Reply *****/
+// Go 버전에서 QuickReply
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct QuickReply {
+    action: String,
+    label: String,
+    message_text: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    block_id: Option<String>,
+}
+
+impl QuickReply {
+    pub fn new(_label: String, _msg: String) -> Self {
+        QuickReply {
+            label: _label,
+            message_text: _msg,
+            action: "message".to_string(),
+            block_id: None,
+        }
+    }
+
+    pub fn set_block_id(mut self, id: String) -> Self {
+        self.block_id = Some(id);
+        self
+    }
+
+    pub fn set_action(mut self, _action: String) -> Self {
+        self.action = _action;
+        self
+    }
+}
+/***** Quick Reply *****/
+
+/***** Extra *****/
+#[derive(Serialize, Deserialize)]
+pub struct Header {
+    header: Title,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct Title {
+    title: String,
+}
+
+impl Header {
+    fn new(_title: String) -> Self {
+        Header {
+            header: Title { title: _title },
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ThumbNail {
+    pub image_url: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub link: Option<Link>,
+    pub fixed_ratio: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub width: Option<i32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub height: Option<i32>,
+}
+
+impl ThumbNail {
+    pub fn new(url: String) -> Self {
+        ThumbNail {
+            image_url: url,
+            link: None,
+            fixed_ratio: false,
+            width: None,
+            height: None,
+        }
+    }
+    pub fn set_link(mut self, url: String) -> Self {
+        self.link = Some(Link { web: url });
+        self
+    }
+
+    pub fn set_image_url(mut self, url: String) -> Self {
+        self.image_url = url;
+        self
+    }
+
+    pub fn set_fixed_ratio(mut self, fixed: bool) -> Self {
+        self.fixed_ratio = fixed;
+        self
+    }
+
+    pub fn set_width(mut self, _width: i32) -> Self {
+        self.width = Some(_width);
+        self
+    }
+
+    pub fn set_height(mut self, _height: i32) -> Self {
+        self.height = Some(_height);
+        self
+    }
+}
+
+/***** Extra *****/
+
+/***** Main *****/
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Template {
+    pub template: Outputs,
+    pub version: String,
+}
+
+impl Template {
+    pub fn new() -> Self {
+        Template {
+            template: Outputs::new(),
+            version: "2.0".to_string(),
+        }
+    }
+
+    pub fn add_output(&mut self, output: Value) {
+        self.template.outputs.push(output);
+    }
+
+    pub fn add_qr(&mut self, qr: QuickReply) {
+        self.template.quick_replies.push(qr);
+    }
+
+    pub fn to_string(&self) -> String {
+        serde_json::to_string(self).unwrap()
+    }
+
+    pub fn build(&self) -> Value {
+        json!(self)
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct Outputs {
+    pub outputs: Vec<Value>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub quick_replies: Vec<QuickReply>,
+}
+
+impl Outputs {
+    fn new() -> Self {
+        Outputs {
+            outputs: Vec::new(),
+            quick_replies: Vec::<QuickReply>::new(),
+        }
+    }
+}
+
+/***** Main *****/
+
+/***** Response *****/
+/* Supports
+    ListCard, SimpleText, Carousel (BasicCard, CommerceCard)
+*/
 
 /***** Carousel *****/
 #[derive(Serialize)]
@@ -63,7 +285,7 @@ impl Carousel {
     // }
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CarouselHeader {
     title: String,
@@ -89,247 +311,6 @@ impl CarouselHeader {
     }
 }
 /***** Carousel *****/
-
-/***** Items *****/
-#[derive(Serialize)]
-pub struct ItemJSON {
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    items: Vec<ListItem>,
-}
-
-impl ItemJSON {
-    fn new() -> Self {
-        ItemJSON { items: Vec::new() }
-    }
-
-    fn push(&mut self, item: ListItem) {
-        self.items.push(item);
-    }
-}
-
-#[derive(Serialize)]
-pub struct Link {
-    pub web: String,
-}
-
-// Go 버전에서 ListItem, ListItemLink 합침
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ListItem {
-    title: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    description: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    image_url: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    link: Option<Link>,
-}
-
-impl ListItem {
-    pub fn new(_title: String) -> Self {
-        ListItem {
-            title: _title,
-            description: None,
-            image_url: None,
-            link: None,
-        }
-    }
-
-    pub fn set_desc(mut self, desc: String) -> Self {
-        self.description = Some(desc);
-        self
-    }
-
-    pub fn set_image(mut self, url: String) -> Self {
-        self.image_url = Some(url);
-        self
-    }
-
-    pub fn set_link(mut self, _url: String) -> Self {
-        self.link = Some(Link { web: _url });
-        self
-    }
-}
-/***** Items *****/
-
-/***** Quick Reply *****/
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct QRJson {
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    quick_replies: Vec<QuickReply>,
-}
-
-impl QRJson {
-    fn new() -> Self {
-        QRJson {
-            quick_replies: Vec::new(),
-        }
-    }
-
-    fn push(&mut self, qr: QuickReply) {
-        self.quick_replies.push(qr);
-    }
-}
-
-// Go 버전에서 QuickReply
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct QuickReply {
-    action: String,
-    label: String,
-    message_text: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    block_id: Option<String>,
-}
-
-impl QuickReply {
-    pub fn new(_label: String, _msg: String) -> Self {
-        QuickReply {
-            label: _label,
-            message_text: _msg,
-            action: "message".to_string(),
-            block_id: None,
-        }
-    }
-
-    pub fn set_block_id(mut self, id: String) -> Self {
-        self.block_id = Some(id);
-        self
-    }
-
-    pub fn set_action(mut self, _action: String) -> Self {
-        self.action = _action;
-        self
-    }
-}
-/***** Quick Reply *****/
-
-/***** Extra *****/
-#[derive(Serialize)]
-pub struct Header {
-    header: Title,
-}
-
-#[derive(Serialize)]
-pub struct Title {
-    title: String,
-}
-
-impl Header {
-    fn new(_title: String) -> Self {
-        Header {
-            header: Title { title: _title },
-        }
-    }
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ThumbNail {
-    pub image_url: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub link: Option<Link>,
-    pub fixed_ratio: bool,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub width: Option<i32>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub height: Option<i32>,
-}
-
-impl ThumbNail {
-    pub fn new(url: String) -> Self {
-        ThumbNail {
-            image_url: url,
-            link: None,
-            fixed_ratio: false,
-            width: None,
-            height: None,
-        }
-    }
-    pub fn set_link(mut self, url: String) -> Self {
-        self.link = Some(Link { web: url });
-        self
-    }
-
-    pub fn set_image_url(mut self, url: String) -> Self {
-        self.image_url = url;
-        self
-    }
-
-    pub fn set_fixed_ratio(mut self, fixed: bool) -> Self {
-        self.fixed_ratio = fixed;
-        self
-    }
-
-    pub fn set_width(mut self, _width: i32) -> Self {
-        self.width = Some(_width);
-        self
-    }
-
-    pub fn set_height(mut self, _height: i32) -> Self {
-        self.height = Some(_height);
-        self
-    }
-}
-
-/***** Extra *****/
-
-/***** Main *****/
-#[derive(Serialize)]
-pub struct Template {
-    template: Outputs,
-    version: String,
-}
-
-impl Template {
-    pub fn new() -> Self {
-        Template {
-            template: Outputs::new(),
-            version: "2.0".to_string(),
-        }
-    }
-
-    pub fn add_output(&mut self, output: Value) {
-        self.template.outputs.push(output);
-    }
-
-    pub fn add_qr(&mut self, qr: QuickReply) {
-        self.template.quick_replies.push(qr);
-    }
-
-    pub fn to_string(&self) -> String {
-        serde_json::to_string(self).unwrap()
-    }
-
-    pub fn build(&self) -> Value {
-        json!(self)
-    }
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Outputs {
-    outputs: Vec<Value>,
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    quick_replies: Vec<QuickReply>,
-}
-
-impl Outputs {
-    fn new() -> Self {
-        Outputs {
-            outputs: Vec::new(),
-            quick_replies: Vec::<QuickReply>::new(),
-        }
-    }
-}
-
-/***** Main *****/
-
-/***** Response *****/
-/* Supports
-    ListCard, SimpleText
-*/
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -376,13 +357,13 @@ impl ListCardContent {
     }
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SimpleText {
     simple_text: SimpleTextContent,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct SimpleTextContent {
     text: String,
 }
@@ -662,17 +643,32 @@ mod test {
     }
 
     #[test]
-    fn qr_json() {
-        let mut result = QRJson::new();
+    fn deserialize_test() {
+        let mut result = Template::new();
+        result.add_qr(QuickReply::new(
+            "빠른 응답".to_string(),
+            "빠른 응답 ㅋㅋ".to_string(),
+        ));
 
-        result.push(QuickReply::new("label".to_string(), "msg".to_string()));
-        result.push(
-            QuickReply::new("label2".to_string(), "msg2".to_string())
-                .set_action("block".to_string())
-                .set_block_id("123".to_string()),
-        );
+        let mut carousel = Carousel::new().set_type(BasicCard::id());
 
-        // println!("{:?}", json!(result));
-        println!("{}", serde_json::to_string(&result).expect("Woah"));
+        for i in 0..5 {
+            let basic_card = BasicCard::new()
+                .set_title(format!("{}번", i))
+                .set_thumbnail(format!(
+                    "http://k.kakaocdn.net/dn/APR96/btqqH7zLanY/kD5mIPX7TdD2NAxgP29cC0/1x1.jpg"
+                ));
+
+            carousel.add_card(Box::new(basic_card));
+        }
+        let simple_text = SimpleText::new(format!("심플 텍스트 테스트"));
+        result.add_output(simple_text.build());
+        result.add_output(carousel.build());
+
+        println!("Result: {}", result.to_string());
+
+        let a: Template = serde_json::from_str(result.to_string().as_str()).unwrap();
+
+        println!("Deserialize: {:#?}", a);
     }
 }
