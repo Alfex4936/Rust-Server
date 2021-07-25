@@ -67,13 +67,26 @@ pub fn last_notice_test(_kakao: Json<Value>, conn: Conn) -> Result<Json<Vec<Noti
 }
 
 #[post("/json", format = "json", data = "<kakao>")]
-pub fn json_test(kakao: Json<Value>) -> Result<Json<Template>, Status> {
+pub fn json_test(kakao: String) -> Result<Json<Value>, Status> {
     // println!("{}", kakao["userRequest"]["utterance"].as_str().unwrap()); // 발화문
 
-    let json: Template = serde_json::from_str(&kakao.to_string()).unwrap();
+    // println!("what is {:#?}", kakao);
+    let mut vec = vec![];
+
+    let json: Template = serde_json::from_str(&kakao).unwrap();
     for output in &json.template.outputs {
-        println!("{:#?}", output);
+        // println!("{:#?}", output);
         println!("Key: {}", check_type(output).unwrap());
+        match check_type(output) {
+            Some(t) => vec.push(t),
+            _ => return Ok(Json(json!({"dd": "Dd"}))),
+        }
     }
-    Ok(Json(json))
+
+    let context = json!({
+        "type": vec,
+        "json": json,
+    });
+
+    Ok(Json(context))
 }

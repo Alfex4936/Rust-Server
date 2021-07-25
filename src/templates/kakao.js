@@ -1,6 +1,7 @@
 const msgerForm = get(".reply");
 const msgerInput = get(".reply-input");
 const msgerChat = get(".main-chat");
+var id = 1;
 
 msgerForm.addEventListener("submit", event => {
   event.preventDefault();
@@ -12,6 +13,8 @@ msgerForm.addEventListener("submit", event => {
   msgerInput.value = "";
 
   appendMessage("bot", "응");
+
+  post(msgText);
 });
 
 function appendMessage(side, text) {
@@ -33,7 +36,7 @@ function appendMessage(side, text) {
     <div class="message-row message-row--own">
         <div class="message-row__content">
             <div class="message__info">
-            <span class="message__bubble">${text}</span>
+            <span id="${id}" class="message__bubble">${text}</span>
             <span class="message__time">${formatDate(new Date())}</span>
             </div>
         </div>
@@ -41,6 +44,7 @@ function appendMessage(side, text) {
     `;
 
   if (side == "user") {
+    id++;
     msgerChat.insertAdjacentHTML("beforeend", userHTML);
   } else {
     msgerChat.insertAdjacentHTML("beforeend", botHTML);
@@ -83,4 +87,19 @@ function formatDate(date) {
 
 function random(min, max) {
   return Math.floor(Math.random() * (max - min) + min);
+}
+
+function post(text) {
+  var xhr = new XMLHttpRequest();
+  var url = "http://localhost:8000/v1/json";
+  xhr.open("POST", url, true);
+  xhr.setRequestHeader("Content-Type", "application/json");
+  xhr.onreadystatechange = function () {
+    if (xhr.readyState === 4 && xhr.status === 200) {
+      var json = JSON.parse(xhr.responseText);
+      console.log("data got!: " + json.type);
+    }
+  };
+  var data = JSON.parse(text);
+  xhr.send(JSON.stringify(data));
 }
