@@ -2,6 +2,9 @@ const msgerForm = get(".reply");
 const msgerInput = get(".reply-input");
 const msgerChat = get(".main-chat");
 var id = 1;
+var last_chat;
+
+window.scrollTo(0, 0);
 
 msgerForm.addEventListener("submit", event => {
   event.preventDefault();
@@ -44,13 +47,21 @@ function appendMessage(side, text) {
     `;
 
   if (side == "user") {
-    id++;
     msgerChat.insertAdjacentHTML("beforeend", userHTML);
+
+    last_chat = document.getElementById(`${id}`);
+    last_chat.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+      inline: "nearest",
+    });
+
+    id++;
   } else {
     msgerChat.insertAdjacentHTML("beforeend", botHTML);
   }
 
-  msgerChat.scrollTop += 500;
+  // msgerChat.scrollTop += 500;
 }
 // Utils
 String.prototype.string = function (len) {

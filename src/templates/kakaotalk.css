@@ -11,6 +11,8 @@
 /* Screens */
 @import "/screens/chat.css";
 
+html { scroll-behavior: smooth; } 
+
 body {
   color: #2e363e;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
