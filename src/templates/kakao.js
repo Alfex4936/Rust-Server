@@ -4,7 +4,12 @@ const msgerChat = get(".main-chat");
 var id = 1;
 var last_chat;
 
-window.scrollTo(0, 0);
+// window.scrollTo(0, 0);
+document.getElementById("chat-screen").scrollIntoView({
+  behavior: "smooth",
+  block: "start",
+  inline: "nearest",
+});
 
 msgerForm.addEventListener("submit", event => {
   event.preventDefault();
@@ -15,7 +20,7 @@ msgerForm.addEventListener("submit", event => {
   appendMessage("user", msgText);
   msgerInput.value = "";
 
-  appendMessage("bot", "응");
+  // appendMessage("bot", "응");
 
   post(msgText);
 });
@@ -108,9 +113,14 @@ function post(text) {
   xhr.onreadystatechange = function () {
     if (xhr.readyState === 4 && xhr.status === 200) {
       var json = JSON.parse(xhr.responseText);
-      console.log("data got!: " + json.type);
+      appendMessage("bot", `메시지 유형: ${json.type}`);
     }
   };
-  var data = JSON.parse(text);
+  var data;
+  try {
+    data = JSON.parse(text);
+  } catch (err) {
+    appendMessage("bot", `올바른 JSON 데이터를 입력하세요: ${err}`);
+  }
   xhr.send(JSON.stringify(data));
 }

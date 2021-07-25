@@ -23,7 +23,7 @@ tests/ : unittest
 
 2. 사이트 자체를 local에 받게한 후 실행 후 POST 방식
 
-![gif](https://user-images.githubusercontent.com/2356749/126861335-a76586f7-8ac4-4725-a37b-10330e6d8794.gif)
+![gif](https://user-images.githubusercontent.com/2356749/126905797-b8241e95-4008-4502-8c38-b859b42c1570.gif)
 
 ## GET `/front/<nums>`
 프론트 엔드 테스트
