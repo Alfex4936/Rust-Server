@@ -76,10 +76,10 @@ pub fn json_test(kakao: String) -> Result<Json<Value>, Status> {
     let json: Template = serde_json::from_str(&kakao).unwrap();
     for output in &json.template.outputs {
         // println!("{:#?}", output);
-        println!("Key: {}", check_type(output).unwrap());
+        // println!("Key: {}", check_type(output).unwrap());
         match check_type(output) {
             Some(t) => vec.push(t),
-            _ => return Ok(Json(json!({"dd": "Dd"}))),
+            _ => return Ok(Json(json!({"type": "알 수 없음", "json": "null"}))),
         }
     }
 

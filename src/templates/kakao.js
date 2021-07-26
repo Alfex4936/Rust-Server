@@ -142,7 +142,7 @@ function post(text) {
   try {
     data = JSON.parse(text);
   } catch (err) {
-    appendMessage("bot", `올바른 JSON 데이터를 입력하세요: ${err}`);
+    appendMessage("bot", `올바른 JSON 데이터를 입력하세요.</br>${err}`);
     return;
   }
   xhr.send(JSON.stringify(data));
