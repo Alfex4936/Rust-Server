@@ -20,15 +20,15 @@
         <div class="message-row__content">
           <span class="message__author">챗봇</span>
           <div class="message__info">
-            <span class="message__bubble">안녕!</span>
-            <span class="message__time">{{ time }}</span>
+            <span class="message__bubble">set server http://localhost:8000/v1</br>set endpoint /json</span>
+            <span id="-1" class="message__time">{{ time }}</span>
           </div>
         </div>
       </div>
       <div class="message-row message-row--own">
         <div class="message-row__content">
           <div class="message__info">
-            <span class="message__bubble">안녕!</span>
+            <span id="1" class="message__bubble">안녕!</span>
             <span class="message__time">{{ time }}</span>
           </div>
         </div>
