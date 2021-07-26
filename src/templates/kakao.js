@@ -49,6 +49,11 @@ msgerForm.addEventListener("submit", event => {
 
   const commands = msgText.split(" ");
   if (commands[0] === "set") {
+    if (commands.length < 3) {
+      appendMessage("bot", "set server/endpoint address 형식으로 입력하세요.");
+      return;
+    }
+
     if (commands[1] === "server") {
       server = commands[2];
     } else if (commands[1] === "endpoint") {

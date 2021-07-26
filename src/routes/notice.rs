@@ -72,8 +72,12 @@ pub fn json_test(kakao: String) -> Result<Json<Value>, Status> {
 
     // println!("what is {:#?}", kakao);
     let mut vec = vec![];
+    let json: Template = match serde_json::from_str(&kakao) {
+        Ok(t) => t,
+        _ => return Ok(Json(json!({"type": "알 수 없음", "json": "null"}))),
+    };
 
-    let json: Template = serde_json::from_str(&kakao).unwrap();
+    // let json: Template = serde_json::from_str(&kakao).map_err(|error| crate::error_status(error));
     for output in &json.template.outputs {
         // println!("{:#?}", output);
         // println!("Key: {}", check_type(output).unwrap());
