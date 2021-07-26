@@ -74,7 +74,7 @@ pub fn json_test(kakao: String) -> Result<Json<Value>, Status> {
     let mut vec = vec![];
     let json: Template = match serde_json::from_str(&kakao) {
         Ok(t) => t,
-        _ => return Ok(Json(json!({"type": "알 수 없음", "json": "null"}))),
+        Err(e) => return Ok(Json(json!({"type": "알 수 없음", "error": e.to_string()}))),
     };
 
     // let json: Template = serde_json::from_str(&kakao).map_err(|error| crate::error_status(error));
@@ -83,7 +83,11 @@ pub fn json_test(kakao: String) -> Result<Json<Value>, Status> {
         // println!("Key: {}", check_type(output).unwrap());
         match check_type(output) {
             Some(t) => vec.push(t),
-            _ => return Ok(Json(json!({"type": "알 수 없음", "json": "null"}))),
+            _ => {
+                return Ok(Json(
+                    json!({"type": "알 수 없음", "error": format!("couldn't identify {}", output)}),
+                ))
+            }
         }
     }
 

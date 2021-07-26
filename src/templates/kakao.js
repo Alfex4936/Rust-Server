@@ -125,15 +125,30 @@ function appendMessage(side, text) {
     </div>
     `;
 
+  var now = formatDate(new Date());
+
   if (side == "user") {
-    if (last_chat_type > 0) {
-      last_user_chat
-        .closest("div")
-        .getElementsByClassName("message__time")[0].textContent = ""; // 시간 지움
-      msgerChat.insertAdjacentHTML("beforeend", userHTML_continued);
-    } else {
-      msgerChat.insertAdjacentHTML("beforeend", userHTML);
+    var time_span = last_user_chat
+      .closest("div")
+      .getElementsByClassName("message__time")[0];
+
+    if (last_user_chat) {
+      if (last_chat_type > 0 && time_span.textContent === now) {
+        time_span.textContent = ""; // 시간 지움
+        msgerChat.insertAdjacentHTML("beforeend", userHTML_continued);
+      } else {
+        msgerChat.insertAdjacentHTML("beforeend", userHTML);
+      }
     }
+
+    // if (last_chat_type > 0) {
+    //   last_user_chat
+    //     .closest("div")
+    //     .getElementsByClassName("message__time")[0].textContent = ""; // 시간 지움
+    //   msgerChat.insertAdjacentHTML("beforeend", userHTML_continued);
+    // } else {
+    //   msgerChat.insertAdjacentHTML("beforeend", userHTML);
+    // }
 
     last_user_chat = document.getElementById(`${user_id}`);
     last_user_chat.scrollIntoView({
@@ -145,9 +160,8 @@ function appendMessage(side, text) {
     last_chat_type = user_id;
     user_id++;
   } else {
-    var now = formatDate(new Date());
-    if (last_bot_chat && last_bot_chat.textContent === now) {
-      if (last_chat_type < 0) {
+    if (last_bot_chat) {
+      if (last_chat_type < 0 && last_bot_chat.textContent === now) {
         last_bot_chat.textContent = ""; // 시간 지움
         msgerChat.insertAdjacentHTML("beforeend", botHTML_continued);
       } else {
@@ -211,8 +225,13 @@ function post(text) {
   xhr.onreadystatechange = function () {
     if (xhr.readyState === 4 && xhr.status === 200) {
       var json = JSON.parse(xhr.responseText);
-      console.log("JSON: " + JSON.stringify(json));
-      appendMessage("bot", `메시지 유형: ${json.type}`);
+      // console.log("JSON: " + JSON.stringify(json));
+      // console.log("error: " + json.error);
+      if (json.error === undefined) {
+        appendMessage("bot", `메시지 유형: ${json.type}`);
+      } else {
+        appendMessage("bot", `오류: ${json.error}`);
+      }
     }
   };
   var data;
