@@ -11,7 +11,12 @@
     <main class="main-screen main-chat">
       <div class="chat__timestamp">{{ date }}</div>
       <div class="message-row">
-        <img src="https://avatars.githubusercontent.com/u/2356749?v=4" />
+        <a
+          href="https://github.com/Alfex4936/Rust-Server"
+          target="_blank"
+          rel="noopener"
+          ><img src="https://avatars.githubusercontent.com/u/2356749?v=4"
+        /></a>
         <div class="message-row__content">
           <span class="message__author">챗봇</span>
           <div class="message__info">

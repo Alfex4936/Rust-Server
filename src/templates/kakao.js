@@ -2,13 +2,31 @@ const msgerForm = get(".reply");
 const msgerInput = get(".reply-input");
 const msgerChat = get(".main-chat");
 var id = 1;
-var last_chat;
+var last_chat = null;
 
 // window.scrollTo(0, 0);
 document.getElementById("chat-screen").scrollIntoView({
   behavior: "smooth",
   block: "start",
   inline: "nearest",
+});
+
+msgerInput.addEventListener("keydown", function (event) {
+  if (event.key === "ArrowUp") {
+    if (last_chat === null) {
+      return;
+    } else {
+      msgerInput.value = last_chat.textContent;
+
+      msgerInput.focus();
+      window.setTimeout(function () {
+        msgerInput.setSelectionRange(
+          msgerInput.value.length,
+          msgerInput.value.length
+        );
+      }, 0);
+    }
+  }
 });
 
 msgerForm.addEventListener("submit", event => {
@@ -29,7 +47,12 @@ function appendMessage(side, text) {
   //   console.log("Loaded");
   const botHTML = `
   <div class="message-row">
-    <img src="https://avatars.githubusercontent.com/u/2356749?v=4" />
+    <a
+      href="https://github.com/Alfex4936/Rust-Server"
+      target="_blank"
+      rel="noopener"
+      ><img src="https://avatars.githubusercontent.com/u/2356749?v=4"
+    /></a>
     <div class="message-row__content">
         <span class="message__author">챗봇</span>
         <div class="message__info">
@@ -65,9 +88,8 @@ function appendMessage(side, text) {
   } else {
     msgerChat.insertAdjacentHTML("beforeend", botHTML);
   }
-
-  // msgerChat.scrollTop += 500;
 }
+
 // Utils
 String.prototype.string = function (len) {
   var s = "",
@@ -98,7 +120,7 @@ function formatDate(date) {
   const m = "0" + date.getMinutes();
   const ap = date.getHours() < 12 ? "AM" : "PM";
 
-  return `${h.zf(2)}:${m.slice(-2)} ${ap}`;
+  return `${h.zf(2)}:${m.slice(-2)} ${ap}`; // ex) 11:03 AM
 }
 
 function random(min, max) {
@@ -121,6 +143,7 @@ function post(text) {
     data = JSON.parse(text);
   } catch (err) {
     appendMessage("bot", `올바른 JSON 데이터를 입력하세요: ${err}`);
+    return;
   }
   xhr.send(JSON.stringify(data));
 }
