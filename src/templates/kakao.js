@@ -91,7 +91,7 @@ function appendMessage(side, text) {
     `;
   const botHTML_continued = `
   <div class="message-row">
-    <img/>
+    <img src="/images/transparent.gif"/>
     <div class="message-row__content">
         <div class="message__info">
             <span class="message__bubble__continue">${text}</span>
@@ -203,9 +203,9 @@ function formatDate(date) {
   h = h ? h : 12; // the hour '0' should be '12'
 
   const m = "0" + date.getMinutes();
-  const ap = date.getHours() < 12 ? "AM" : "PM";
+  const ap = date.getHours() < 12 ? "오전" : "오후";
 
-  return `${h.zf(2)}:${m.slice(-2)} ${ap}`; // ex) 11:03 AM
+  return `${ap} ${h}:${m.slice(-2)}`; // ex) 오후 1:03분
 }
 
 function random(min, max) {
