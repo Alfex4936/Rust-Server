@@ -9,6 +9,7 @@ use unicode_segmentation::UnicodeSegmentation;
 
 /***** Items *****/
 #[derive(Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct ItemJSON {
     #[serde(skip_serializing_if = "Vec::is_empty")]
     items: Vec<ListItem>,
@@ -25,6 +26,7 @@ impl ItemJSON {
 }
 
 #[derive(Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Link {
     pub web: String,
 }
@@ -32,6 +34,7 @@ pub struct Link {
 // Go 버전에서 ListItem, ListItemLink 합침
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
 pub struct ListItem {
     title: String,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -73,6 +76,7 @@ impl ListItem {
 // Go 버전에서 QuickReply
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
 pub struct QuickReply {
     action: String,
     label: String,
@@ -105,11 +109,13 @@ impl QuickReply {
 
 /***** Extra *****/
 #[derive(Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Header {
     header: Title,
 }
 
 #[derive(Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Title {
     title: String,
 }
@@ -124,6 +130,7 @@ impl Header {
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
 pub struct ThumbNail {
     pub image_url: String,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -175,6 +182,7 @@ impl ThumbNail {
 
 /***** Main *****/
 #[derive(Serialize, Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
 pub struct Template {
     pub template: Outputs,
     pub version: String,
@@ -205,8 +213,17 @@ impl Template {
     }
 }
 
+// #[derive(Serialize, Deserialize, Debug)]
+// enum Types {
+//     ListCard,
+//     Bc(BasicCard),
+//     St(SimpleText),
+//     Cs(Carousel),
+// }
+
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
 pub struct Outputs {
     pub outputs: Vec<Value>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -231,12 +248,14 @@ impl Outputs {
 
 /***** Carousel *****/
 #[derive(Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct Carousel {
     carousel: CarouselContent,
 }
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
 pub struct CarouselContent {
     r#type: String,
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -287,6 +306,7 @@ impl Carousel {
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
 pub struct CarouselHeader {
     title: String,
     description: String,
@@ -313,12 +333,14 @@ impl CarouselHeader {
 /***** Carousel *****/
 
 #[derive(Serialize)]
+#[serde(deny_unknown_fields)]
 #[serde(rename_all = "camelCase")]
 pub struct ListCard {
     list_card: ListCardContent,
 }
 
 #[derive(Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct ListCardContent {
     #[serde(skip_serializing_if = "Vec::is_empty")]
     buttons: Vec<Box<dyn erased_serde::Serialize>>,
@@ -359,11 +381,13 @@ impl ListCardContent {
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
 pub struct SimpleText {
     simple_text: SimpleTextContent,
 }
 
 #[derive(Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct SimpleTextContent {
     text: String,
 }

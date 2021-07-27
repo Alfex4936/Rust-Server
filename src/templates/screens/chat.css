@@ -139,6 +139,7 @@
   border-top-left-radius: 10px;
   margin-right: 0px;
   margin-left: 5px;
+  max-width: 920px;
 }
 
 .message-row--own .message__bubble__continue {
@@ -147,6 +148,7 @@
   border-top-left-radius: 10px;
   margin-right: 0px;
   margin-left: 5px;
+  max-width: 920px;
 }
 
 .message-row--own .message__info {

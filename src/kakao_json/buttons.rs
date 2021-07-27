@@ -15,7 +15,7 @@
     ]
 }
 */
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 /***** Buttons *****/
 #[allow(patterns_in_fns_without_body)]
@@ -27,6 +27,7 @@ pub trait Button: Serialize {
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
 pub struct CallButton {
     label: String,
     action: String,
@@ -65,6 +66,7 @@ impl Button for CallButton {
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
 pub struct MsgButton {
     label: String,
     action: String,
@@ -92,8 +94,9 @@ impl Button for MsgButton {
     }
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
 pub struct LinkButton {
     label: String,
     action: String,
@@ -132,6 +135,7 @@ impl Button for LinkButton {
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
 pub struct ShareButton {
     label: String,
     action: String,

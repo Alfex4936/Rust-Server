@@ -15,6 +15,7 @@ pub trait Card: Serialize {
 /***** BasicCard *****/
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
 pub struct BasicCard {
     #[serde(skip_serializing_if = "Option::is_none")]
     title: Option<String>,
@@ -92,6 +93,7 @@ impl Card for BasicCard {
 /***** CommerceCard *****/
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
 pub struct CommerceCard {
     description: String,
     price: i32,
