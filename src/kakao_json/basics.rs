@@ -443,6 +443,10 @@ impl SimpleText {
     pub fn build(self) -> Types {
         Types::Simple(self)
     }
+
+    pub fn html(&self) -> String {
+        format!("{}", self.simple_text.text)
+    }
 }
 
 /***** Response *****/

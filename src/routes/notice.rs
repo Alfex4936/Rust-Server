@@ -3,7 +3,7 @@ use crate::db::connection::Conn;
 use crate::db::models::Notice;
 use crate::db::models::Schedule;
 use crate::db::query;
-use crate::kakao_json::basics::Template;
+use crate::kakao_json::basics::{Template, Types};
 use crate::utils::parser::{check_type, notice_parse};
 
 use chrono::prelude::*;
@@ -11,6 +11,7 @@ use chrono::Duration;
 use rocket::http::Status;
 use rocket_contrib::json::Json;
 use serde_json::Value;
+use std::collections::HashMap;
 
 #[get("/hello")]
 pub fn hello() -> Json<Notice> {
@@ -69,33 +70,47 @@ pub fn last_notice_test(_kakao: Json<Value>, conn: Conn) -> Result<Json<Vec<Noti
 #[post("/json", format = "json", data = "<kakao>")]
 pub fn json_test(kakao: String) -> Result<Json<Value>, Status> {
     // println!("what is {:#?}", kakao);
-    let mut vec = vec![];
+    // let mut vec = vec![];
+
+    let mut map = HashMap::new();
+
     let json: Template = match serde_json::from_str(&kakao) {
         Ok(t) => t,
-        Err(e) => {
+        Err(_) => {
             return Ok(Json(
                 json!({"type": "알 수 없음", "error": "SimpleText, BasicCard, ListCard, BasicCard 중 매치되는 데이터가 없습니다.</br>필드를 다시 확인해주세요."}),
             ))
         }
     };
 
-    // let json: Template = serde_json::from_str(&kakao).map_err(|error| crate::error_status(error));
     for output in &json.template.outputs {
         // println!("{:#?}", output);
         // println!("Key: {}", check_type(output).unwrap());
-        match check_type(output) {
-            Some(t) => vec.push(t),
-            _ => {
-                // deny unknown fields 때문에 unreachable
-                return Ok(Json(
-                    json!({"type": "알 수 없음", "error": format!("couldn't identify {:?}", output)}),
-                ));
+
+        match output {
+            Types::Simple(s) => {
+                map.insert("simpleText".to_string(), s.html());
+            }
+            Types::Carousel(_) => {
+                map.insert("carousel".to_string(), "carousel".to_string());
+            }
+            Types::Basic(_) => {
+                map.insert("basicCard".to_string(), "carousel".to_string());
+            }
+            Types::List(_) => {
+                map.insert("listCard".to_string(), "carousel".to_string());
             }
         }
     }
 
+    if map.keys().len() == 0 {
+        return Ok(Json(
+            json!({"type": "알 수 없음", "error": "SimpleText, BasicCard, ListCard, BasicCard 중 매치되는 데이터가 없습니다.</br>필드를 다시 확인해주세요."}),
+        ));
+    }
+
     let context = json!({
-        "type": vec,
+        "type": map,
         "json": json,
     });
 

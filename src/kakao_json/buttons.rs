@@ -15,10 +15,12 @@
     ]
 }
 */
-use serde::{Deserialize, Serialize};
+use serde::{de::Error, Deserialize, Deserializer, Serialize};
+use serde_json::{Map, Value};
+use std::collections::HashMap;
 
 /***** Buttons *****/
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Debug)]
 #[serde(untagged)]
 pub enum Button {
     Call(CallButton),
@@ -27,99 +29,99 @@ pub enum Button {
     Msg(MsgButton),
 }
 
-// impl<'de> Deserialize<'de> for Button {
-//     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-//     where
-//         D: Deserializer<'de>,
-//     {
-//         let text: Map<String, Value> = Map::deserialize(deserializer)?;
-//         let mut keys = HashMap::new();
-//         for (key, value) in &text {
-//             let _value = value.as_str().unwrap();
-//             keys.insert(key.to_owned(), _value.to_string());
-//         }
+impl<'de> Deserialize<'de> for Button {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let text: Map<String, Value> = Map::deserialize(deserializer)?;
+        let mut keys = HashMap::new();
+        for (key, value) in &text {
+            let _value = value.as_str().unwrap();
+            keys.insert(key.to_owned(), _value.to_string());
+        }
 
-//         let mut button: Button = match text.get("action").unwrap().as_str() {
-//             Some("webLink") => Self::Link(LinkButton::new("label".to_string())),
-//             Some("share") => Self::Share(ShareButton::new("label".to_string())),
-//             Some("message") => Self::Msg(MsgButton::new("label".to_string())),
-//             Some("phone") => Self::Call(CallButton::new("label".to_string())),
-//             _ => Self::Msg(MsgButton::new("label".to_string())),
-//         };
+        let mut button: Button = match text.get("action").unwrap().as_str() {
+            Some("webLink") => Self::Link(LinkButton::new("label".to_string())),
+            Some("share") => Self::Share(ShareButton::new("label".to_string())),
+            Some("message") => Self::Msg(MsgButton::new("label".to_string())),
+            Some("phone") => Self::Call(CallButton::new("label".to_string())),
+            _ => Self::Msg(MsgButton::new("label".to_string())),
+        };
 
-//         for (key, value) in &text {
-//             let _value = value.as_str().unwrap();
-//             match &mut button {
-//                 Self::Link(link) => match link {
-//                     LinkButton {
-//                         ref mut label,
-//                         ref action,
-//                         ref mut web_link_url,
-//                         ref mut message_text,
-//                     } => {
-//                         if let Some(l) = keys.get("label") {
-//                             *label = l.to_string();
-//                         }
-//                         if let Some(l) = keys.get("webLinkUrl") {
-//                             *web_link_url = l.to_string();
-//                         }
-//                         if let Some(l) = keys.get("messageText") {
-//                             *message_text = Some(l.to_string());
-//                         }
-//                     }
-//                 },
-//                 Self::Share(share) => match share {
-//                     ShareButton {
-//                         ref mut label,
-//                         ref action,
-//                         ref mut message_text,
-//                     } => {
-//                         if let Some(l) = keys.get("label") {
-//                             *label = l.to_string();
-//                         }
-//                         if let Some(l) = keys.get("messageText") {
-//                             *message_text = Some(l.to_string());
-//                         }
-//                     }
-//                 },
-//                 Self::Msg(msg) => match msg {
-//                     MsgButton {
-//                         ref mut label,
-//                         ref action,
-//                         ref mut message_text,
-//                     } => {
-//                         if let Some(l) = keys.get("label") {
-//                             *label = l.to_string();
-//                         }
-//                         if let Some(l) = keys.get("messageText") {
-//                             *message_text = Some(l.to_string());
-//                         }
-//                     }
-//                 },
-//                 Self::Call(call) => match call {
-//                     CallButton {
-//                         ref mut label,
-//                         ref action,
-//                         ref mut phone_number,
-//                         ref mut message_text,
-//                     } => {
-//                         if let Some(l) = keys.get("label") {
-//                             *label = l.to_string();
-//                         }
-//                         if let Some(l) = keys.get("phoneNumber") {
-//                             *phone_number = l.to_string();
-//                         }
-//                         if let Some(l) = keys.get("messageText") {
-//                             *message_text = Some(l.to_string());
-//                         }
-//                     }
-//                 },
-//             }
-//         }
+        for (key, value) in &text {
+            let _value = value.as_str().unwrap();
+            match &mut button {
+                Self::Link(link) => match link {
+                    LinkButton {
+                        ref mut label,
+                        ref action,
+                        ref mut web_link_url,
+                        ref mut message_text,
+                    } => {
+                        if let Some(l) = keys.get("label") {
+                            *label = l.to_string();
+                        }
+                        if let Some(l) = keys.get("webLinkUrl") {
+                            *web_link_url = l.to_string();
+                        }
+                        if let Some(l) = keys.get("messageText") {
+                            *message_text = Some(l.to_string());
+                        }
+                    }
+                },
+                Self::Share(share) => match share {
+                    ShareButton {
+                        ref mut label,
+                        ref action,
+                        ref mut message_text,
+                    } => {
+                        if let Some(l) = keys.get("label") {
+                            *label = l.to_string();
+                        }
+                        if let Some(l) = keys.get("messageText") {
+                            *message_text = Some(l.to_string());
+                        }
+                    }
+                },
+                Self::Msg(msg) => match msg {
+                    MsgButton {
+                        ref mut label,
+                        ref action,
+                        ref mut message_text,
+                    } => {
+                        if let Some(l) = keys.get("label") {
+                            *label = l.to_string();
+                        }
+                        if let Some(l) = keys.get("messageText") {
+                            *message_text = Some(l.to_string());
+                        }
+                    }
+                },
+                Self::Call(call) => match call {
+                    CallButton {
+                        ref mut label,
+                        ref action,
+                        ref mut phone_number,
+                        ref mut message_text,
+                    } => {
+                        if let Some(l) = keys.get("label") {
+                            *label = l.to_string();
+                        }
+                        if let Some(l) = keys.get("phoneNumber") {
+                            *phone_number = l.to_string();
+                        }
+                        if let Some(l) = keys.get("messageText") {
+                            *message_text = Some(l.to_string());
+                        }
+                    }
+                },
+            }
+        }
 
-//         Ok(button)
-//     }
-// }
+        Ok(button)
+    }
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]

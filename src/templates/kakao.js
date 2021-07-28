@@ -228,9 +228,16 @@ function post(text) {
       // console.log("JSON: " + JSON.stringify(json));
       // console.log("error: " + json.error);
       if (json.error === undefined) {
-        appendMessage("bot", `메시지 유형: ${json.type}`);
+        appendMessage("bot", `메시지 유형: ${JSON.stringify(json.type)}`);
       } else {
         appendMessage("bot", `오류: ${json.error}`);
+        return;
+      }
+
+      // 메시지 응답
+      appendMessage("bot", "봇 응답:");
+      if (json.type.simpleText !== undefined) {
+        appendMessage("bot", `${json.type.simpleText}`);
       }
     }
   };
