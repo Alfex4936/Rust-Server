@@ -1,9 +1,10 @@
-use crate::db::models::Notice;
+use crate::db::models::{Notice, Weather};
 use crate::kakao_json::basics::Types;
 use reqwest::header::USER_AGENT;
 use scraper::{Html, Selector};
 
 const AJOU_LINK: &'static str = "https://www.ajou.ac.kr/kr/ajou/notice.do";
+const NAVER_WEATHER: &'static str = "https://weather.naver.com/today/02117530?cpName=ACCUWEATHER"; // 아주대 지역 날씨
 
 pub fn notice_parse(_nums: Option<usize>) -> Result<Vec<Notice>, reqwest::Error> {
     let mut ajou =
@@ -100,21 +101,112 @@ pub fn notice_parse(_nums: Option<usize>) -> Result<Vec<Notice>, reqwest::Error>
     Ok(notices)
 }
 
-pub fn check_type(obj: &Types) -> Option<String> {
-    let types = vec![
-        "simpleText",
-        "carousel",
-        "listCard",
-        "simpleImage",
-        "basicCard",
-        "commerceCard",
-    ];
+pub fn weather_parse() -> Result<Weather, reqwest::Error> {
+    // Blocking NON-ASYNC
+    let client = reqwest::blocking::Client::builder()
+        .danger_accept_invalid_certs(true)
+        .build()?;
 
-    match obj {
-        Types::Simple(_) => return Some("simpleText".to_string()),
-        Types::Carousel(_) => return Some("carousel".to_string()),
-        Types::Basic(_) => return Some("basicCard".to_string()),
-        Types::List(_) => return Some("listCard".to_string()),
+    // header 없이 보내면 404
+    let res = client.get(NAVER_WEATHER).header(USER_AGENT, "User-Agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.114 Safari/537.36").send()?;
+    let body = res.text()?;
+
+    // println!("Body:\n{}", body);
+
+    // HTML Parse
+    let mut weather: Weather = Default::default();
+
+    let document = Html::parse_document(&body);
+
+    // Notice has id, title, date, link, writer
+    let current_temp = Selector::parse("strong.current").unwrap();
+    let current_stat = Selector::parse("span.weather").unwrap();
+    let temps = Selector::parse("span.data").unwrap();
+    let rains = Selector::parse("span.rainfall").unwrap();
+    let stats = Selector::parse("em.level_text").unwrap();
+    let icon = Selector::parse("div.today_weather > i").unwrap();
+    let wind_chill = Selector::parse("div.weather_area > dl > dd:nth-child(6)").unwrap();
+
+    let current_temp_element = document.select(&current_temp).next().unwrap();
+    let current_stat_element = document.select(&current_stat).next().unwrap();
+    let mut temps_element = document.select(&temps);
+    let mut stats_element = document.select(&stats);
+    let mut rains_element = document.select(&rains);
+    let icon_element = document.select(&icon).next().unwrap();
+    let wind_chill_element = document.select(&wind_chill).next().unwrap();
+
+    let current_temp = current_temp_element.text().collect::<Vec<_>>()[1]
+        .trim()
+        .to_string()
+        + "도"; // "28도"
+
+    let current_stat = current_stat_element.text().collect::<Vec<_>>()[0]
+        .trim()
+        .to_string(); // "구름조금"
+
+    let day_temp = temps_element.next().unwrap().text().collect::<Vec<_>>()[1]
+        .trim()
+        .to_string()
+        + "도"; // "최고 온도"
+    let night_temp = temps_element.next().unwrap().text().collect::<Vec<_>>()[1]
+        .trim()
+        .to_string()
+        + "도"; // "최저 온도"
+
+    let fine_dust = stats_element.next().unwrap().text().collect::<Vec<_>>()[0]
+        .trim()
+        .to_string(); // "보통"
+    let ultra_dust = stats_element.next().unwrap().text().collect::<Vec<_>>()[0]
+        .trim()
+        .to_string(); // "나쁨"
+    let uv = stats_element.next().unwrap().text().collect::<Vec<_>>()[0]
+        .trim()
+        .to_string(); // "높음"
+
+    let day_rain = rains_element.next().unwrap().text().collect::<Vec<_>>()[1]
+        .trim()
+        .to_string(); // "55%"
+    let night_rain = rains_element.next().unwrap().text().collect::<Vec<_>>()[1]
+        .trim()
+        .to_string(); // "8%"
+
+    let wind_chill = wind_chill_element.text().collect::<Vec<_>>()[0].trim(); // "33"
+    let wind_chill = wind_chill.replace("°", "") + "도";
+
+    let mut icon = icon_element.value().attr("data-ico").unwrap().to_string();
+    let icon_classes = icon_element.value().attr("class").unwrap();
+
+    // struct Weather init
+    weather.current_temp = current_temp;
+    weather.wind_chill = wind_chill;
+    weather.current_status = current_stat;
+    weather.max_temp = day_temp;
+    weather.min_temp = night_temp;
+    weather.rain_day = day_rain;
+    weather.rain_night = night_rain;
+    weather.fine_dust = fine_dust;
+    weather.ultra_dust = ultra_dust;
+    weather.uv = uv;
+
+    if icon_classes.contains("night") {
+        icon = icon + "_night";
     }
-    None
+
+    weather.icon = format!(
+        "https://raw.githubusercontent.com/Alfex4936/KakaoChatBot-Golang/main/imgs/{}.png?raw=true",
+        icon
+    );
+
+    Ok(weather)
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn weather_test() {
+        let weather = weather_parse().unwrap();
+        println!("{:#?}", weather);
+    }
 }

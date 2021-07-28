@@ -35,10 +35,17 @@ pub struct Schedule {
     pub content: String,
 }
 
-// impl Schedule {
-//     pub fn read(conn: &MysqlConnection) -> Result<Vec<Schedule>, Error> {
-//         ajou_sched::table
-//             .order(ajou_sched::id.asc())
-//             .load::<Schedule>(conn)
-//     }
-// }
+#[derive(Debug, Default)]
+pub struct Weather {
+    pub max_temp: String,
+    pub min_temp: String,
+    pub current_temp: String,
+    pub current_status: String,
+    pub wind_chill: String, // 체감온도
+    pub rain_day: String,
+    pub rain_night: String,
+    pub fine_dust: String,
+    pub ultra_dust: String,
+    pub uv: String,
+    pub icon: String,
+}
