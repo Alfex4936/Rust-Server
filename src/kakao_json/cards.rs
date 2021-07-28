@@ -1,19 +1,18 @@
 use crate::kakao_json::basics::*;
-use serde::Serialize;
+use crate::kakao_json::buttons::Button;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 /***** Buttons *****/
-#[allow(patterns_in_fns_without_body)]
-pub trait Card: Serialize {
-    fn new() -> Self;
-    fn add_button(mut self, btn: Box<dyn erased_serde::Serialize>) -> Self;
-    fn set_desc(mut self, desc: String) -> Self;
-    fn set_thumbnail(mut self, url: String) -> Self;
-    fn build(&self) -> Value;
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(untagged)]
+pub enum Card {
+    Basic(BasicCard),
+    Commerce(CommerceCard),
 }
 
 /***** BasicCard *****/
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 pub struct BasicCard {
@@ -22,11 +21,37 @@ pub struct BasicCard {
     #[serde(skip_serializing_if = "Option::is_none")]
     description: Option<String>,
     thumbnail: ThumbNail, // 필수
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    buttons: Vec<Box<dyn erased_serde::Serialize>>,
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
+    buttons: Vec<Button>,
 }
 
 impl BasicCard {
+    pub fn new() -> Self {
+        BasicCard {
+            title: None,
+            description: None,
+            thumbnail: ThumbNail::new("".to_string()),
+            buttons: Vec::new(),
+        }
+    }
+    pub fn add_button(mut self, btn: Button) -> Self {
+        self.buttons.push(btn);
+        self
+    }
+
+    pub fn set_desc(mut self, desc: String) -> Self {
+        self.description = Some(desc);
+        self
+    }
+    pub fn set_thumbnail(mut self, url: String) -> Self {
+        self.thumbnail.image_url = url;
+        self
+    }
+
+    pub fn build(self) -> Types {
+        Types::Basic(self)
+    }
+
     pub fn set_title(mut self, title: String) -> Self {
         self.title = Some(title);
         self
@@ -61,37 +86,10 @@ impl BasicCard {
     }
 }
 
-impl Card for BasicCard {
-    fn new() -> Self {
-        BasicCard {
-            title: None,
-            description: None,
-            thumbnail: ThumbNail::new("".to_string()),
-            buttons: Vec::new(),
-        }
-    }
-    fn add_button(mut self, btn: Box<dyn erased_serde::Serialize>) -> Self {
-        self.buttons.push(btn);
-        self
-    }
-
-    fn set_desc(mut self, desc: String) -> Self {
-        self.description = Some(desc);
-        self
-    }
-    fn set_thumbnail(mut self, url: String) -> Self {
-        self.thumbnail.image_url = url;
-        self
-    }
-
-    fn build(&self) -> Value {
-        json!(self)
-    }
-}
 /***** BasicCard *****/
 
 /***** CommerceCard *****/
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 pub struct CommerceCard {
@@ -104,13 +102,112 @@ pub struct CommerceCard {
     discount_rate: Option<i32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     discounted_price: Option<i32>,
-    #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
     thumbnails: Vec<ThumbNail>, // 필수, 1개만 지원
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    buttons: Vec<Box<dyn erased_serde::Serialize>>, // 필수
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
+    buttons: Vec<Button>, // 필수
 }
 
+// impl<'de> Deserialize<'de> for CommerceCard {
+//     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+//     where
+//         D: Deserializer<'de>,
+//     {
+//         let mut content = CommerceCard::new();
+
+//         let text: Map<String, Value> = Map::deserialize(deserializer)?;
+//         println!("what is de text: {:?}", text);
+
+//         /* item
+//         {
+//             "currency": String(
+//                 "WON",
+//             ),
+//             "description": String(
+//                 "0 DESC",
+//             ),
+//             "price": Number(
+//                 5000,
+//             ),
+//             "thumbnails": Array([
+//                 Object({
+//                     "fixedRatio": Bool(
+//                         false,
+//                     ),
+//                     "imageUrl": String(
+//                         "http://k.kakaocdn.net/dn/APR96/btqqH7zLanY/kD5mIPX7TdD2NAxgP29cC0/1x1.jpg",
+//                     ),
+//                 }),
+//             ]),
+//         }
+//         */
+//         content.currency = text.get("currency").unwrap().to_string();
+//         content.description = text.get("description").unwrap().to_string();
+//         content.price = i32::try_from(text.get("price").unwrap().as_i64().unwrap()).unwrap();
+//         content.discount = match text.get("discount") {
+//             Some(d) => Some(i32::try_from(d.as_i64().unwrap()).unwrap()),
+//             _ => None,
+//         };
+//         content.discount_rate = match text.get("discountRate") {
+//             Some(d) => Some(i32::try_from(d.as_i64().unwrap()).unwrap()),
+//             _ => None,
+//         };
+
+//         content.discounted_price = match text.get("discountPrice") {
+//             Some(d) => Some(i32::try_from(d.as_i64().unwrap()).unwrap()),
+//             _ => None,
+//         };
+
+//         if let Some(value) = text.get("thumbnails") {
+//             for item in value.as_array().unwrap() {
+//                 let thumbnail: ThumbNail = serde_json::from_value(value.to_owned()).unwrap();
+//                 content.thumbnails.push(thumbnail);
+//             }
+//         }
+
+//         // if let Some(value) = text.get("buttons") {
+//         //     for item in value.as_array().unwrap() {
+//         //         // let button: dyn Button = serde_json::from_value(Box::new(<dyn erased_serde::Deserializer>::erase(value))).unwrap();
+//         //         let button: Box<dyn erased_serde::Serialize> = Box::new(<dyn erased_serde::Deserializer>::erase(value));
+//         //         content.buttons.push(button);
+//         //     }
+//         // }
+
+//         Ok(content)
+//     }
+// }
+
 impl CommerceCard {
+    pub fn new() -> Self {
+        CommerceCard {
+            description: "".to_string(),
+            price: 0,
+            currency: "".to_string(),
+            discount: None,
+            discount_rate: None,
+            discounted_price: None,
+            thumbnails: Vec::new(),
+            buttons: Vec::new(),
+        }
+    }
+    pub fn add_button(mut self, btn: Button) -> Self {
+        self.buttons.push(btn);
+        self
+    }
+
+    pub fn set_desc(mut self, desc: String) -> Self {
+        self.description = desc;
+        self
+    }
+    pub fn set_thumbnail(mut self, url: String) -> Self {
+        self.thumbnails.push(ThumbNail::new(url));
+        self
+    }
+
+    pub fn build(&self) -> Value {
+        json!(self)
+    }
+
     pub fn set_price(mut self, price: i32) -> Self {
         self.price = price;
         self
@@ -138,37 +235,6 @@ impl CommerceCard {
     }
 }
 
-impl Card for CommerceCard {
-    fn new() -> Self {
-        CommerceCard {
-            description: "".to_string(),
-            price: 0,
-            currency: "".to_string(),
-            discount: None,
-            discount_rate: None,
-            discounted_price: None,
-            thumbnails: Vec::new(),
-            buttons: Vec::new(),
-        }
-    }
-    fn add_button(mut self, btn: Box<dyn erased_serde::Serialize>) -> Self {
-        self.buttons.push(btn);
-        self
-    }
-
-    fn set_desc(mut self, desc: String) -> Self {
-        self.description = desc;
-        self
-    }
-    fn set_thumbnail(mut self, url: String) -> Self {
-        self.thumbnails.push(ThumbNail::new(url));
-        self
-    }
-
-    fn build(&self) -> Value {
-        json!(self)
-    }
-}
 /***** CommerceCard *****/
 
 /***** ItemCard *****/
@@ -319,6 +385,14 @@ mod test {
 
         result.add_output(basic_card.build());
 
-        println!("Result: {}", result.to_string());
+        println!(
+            "Serialize: {}",
+            serde_json::to_string_pretty(&result).expect("Woah")
+        );
+        let a: Template = serde_json::from_str(result.to_string().as_str()).unwrap();
+        println!(
+            "\nDeserialize: {}",
+            serde_json::to_string_pretty(&a).expect("Woah")
+        );
     }
 }

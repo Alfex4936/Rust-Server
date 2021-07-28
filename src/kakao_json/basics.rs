@@ -3,36 +3,19 @@ use crate::kakao_json::buttons::*;
 use crate::kakao_json::cards::*;
 use crate::utils::parser::notice_parse;
 use chrono::prelude::Local;
-use serde::{Deserialize, Serialize};
-use serde_json::Value;
+use serde::{de::Error, Deserialize, Deserializer, Serialize};
+use serde_json::{Map, Value};
 use unicode_segmentation::UnicodeSegmentation;
 
 /***** Items *****/
-#[derive(Serialize)]
-#[serde(deny_unknown_fields)]
-pub struct ItemJSON {
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    items: Vec<ListItem>,
-}
-
-impl ItemJSON {
-    fn new() -> Self {
-        ItemJSON { items: Vec::new() }
-    }
-
-    fn push(&mut self, item: ListItem) {
-        self.items.push(item);
-    }
-}
-
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct Link {
     pub web: String,
 }
 
 // Go 버전에서 ListItem, ListItemLink 합침
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 pub struct ListItem {
@@ -114,7 +97,7 @@ pub struct Header {
     header: Title,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct Title {
     title: String,
@@ -128,7 +111,7 @@ impl Header {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 pub struct ThumbNail {
@@ -196,7 +179,7 @@ impl Template {
         }
     }
 
-    pub fn add_output(&mut self, output: Value) {
+    pub fn add_output(&mut self, output: Types) {
         self.template.outputs.push(output);
     }
 
@@ -213,20 +196,21 @@ impl Template {
     }
 }
 
-// #[derive(Serialize, Deserialize, Debug)]
-// enum Types {
-//     ListCard,
-//     Bc(BasicCard),
-//     St(SimpleText),
-//     Cs(Carousel),
-// }
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(untagged)]
+pub enum Types {
+    List(ListCard),
+    Basic(BasicCard),
+    Simple(SimpleText),
+    Carousel(Carousel),
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 pub struct Outputs {
-    pub outputs: Vec<Value>,
-    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub outputs: Vec<Types>,
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
     pub quick_replies: Vec<QuickReply>,
 }
 
@@ -247,22 +231,74 @@ impl Outputs {
 */
 
 /***** Carousel *****/
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct Carousel {
     carousel: CarouselContent,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 pub struct CarouselContent {
     r#type: String,
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    items: Vec<Box<dyn erased_serde::Serialize>>, // TODO ItemCard, ListCard
+    // #[serde(default)]
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
+    items: Vec<Card>, // TODO ItemCard, ListCard
+    // #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     header: Option<CarouselHeader>,
 }
+
+// impl<'de> Deserialize<'de> for CarouselContent {
+//     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+//     where
+//         D: Deserializer<'de>,
+//     {
+//         let mut content = CarouselContent {
+//             r#type: "basicCard".to_string(),
+//             items: Vec::new(),
+//             header: None,
+//         };
+
+//         let text: Map<String, Value> = Map::deserialize(deserializer)?;
+//         println!("what is de text: {:?}", text);
+
+//         content.r#type = text.get("type").unwrap().to_string();
+//         /* item
+//         {
+//             "currency": String(
+//                 "WON",
+//             ),
+//             "description": String(
+//                 "0 DESC",
+//             ),
+//             "price": Number(
+//                 5000,
+//             ),
+//             "thumbnails": Array([
+//                 Object({
+//                     "fixedRatio": Bool(
+//                         false,
+//                     ),
+//                     "imageUrl": String(
+//                         "http://k.kakaocdn.net/dn/APR96/btqqH7zLanY/kD5mIPX7TdD2NAxgP29cC0/1x1.jpg",
+//                     ),
+//                 }),
+//             ]),
+//         }
+//         */
+//         for item in text.get("items").unwrap().as_array().unwrap() {
+//             println!("\ntest: {:#?}", item);
+//         }
+
+//         for (key, value) in text.iter() {
+//             println!("\nitem is {:?} and {:?}", key, value);
+//         }
+
+//         Ok(content)
+//     }
+// }
 
 impl Carousel {
     pub fn new() -> Self {
@@ -275,12 +311,12 @@ impl Carousel {
         }
     }
 
-    pub fn add_card(&mut self, card: Box<dyn erased_serde::Serialize>) {
+    pub fn add_card(&mut self, card: Card) {
         self.carousel.items.push(card);
     }
 
-    pub fn build(&self) -> Value {
-        json!(self)
+    pub fn build(self) -> Types {
+        Types::Carousel(self)
     }
 
     pub fn set_type(mut self, _type: String) -> Self {
@@ -304,7 +340,7 @@ impl Carousel {
     // }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 pub struct CarouselHeader {
@@ -332,18 +368,18 @@ impl CarouselHeader {
 }
 /***** Carousel *****/
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(deny_unknown_fields)]
 #[serde(rename_all = "camelCase")]
 pub struct ListCard {
     list_card: ListCardContent,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct ListCardContent {
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    buttons: Vec<Box<dyn erased_serde::Serialize>>,
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
+    buttons: Vec<Button>,
     header: Title, // 필수
     // #[serde(skip_serializing_if = "Vec::is_empty")]
     items: Vec<ListItem>, // 필수
@@ -356,7 +392,7 @@ impl ListCard {
         }
     }
 
-    pub fn add_button(&mut self, button: Box<dyn erased_serde::Serialize>) {
+    pub fn add_button(&mut self, button: Button) {
         self.list_card.buttons.push(button);
     }
 
@@ -364,8 +400,8 @@ impl ListCard {
         self.list_card.items.push(item);
     }
 
-    pub fn build(self) -> Value {
-        json!(self)
+    pub fn build(self) -> Types {
+        Types::List(self)
     }
 }
 
@@ -379,14 +415,14 @@ impl ListCardContent {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 pub struct SimpleText {
     simple_text: SimpleTextContent,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct SimpleTextContent {
     text: String,
@@ -404,8 +440,8 @@ impl SimpleText {
         self
     }
 
-    pub fn build(self) -> Value {
-        json!(self)
+    pub fn build(self) -> Types {
+        Types::Simple(self)
     }
 }
 
@@ -414,6 +450,43 @@ impl SimpleText {
 #[cfg(test)]
 mod test {
     use super::*;
+
+    #[test]
+    fn deserialize_erased_struct() {
+        let data = r#"
+        {
+            "carousel": {
+                "items": [
+                    {
+                        "currency": "WON",
+                        "description": "0 DESC",
+                        "price": 5000,
+                        "thumbnails": [
+                            {
+                                "fixedRatio": false,
+                                "imageUrl": "http://k.kakaocdn.net/dn/APR96/btqqH7zLanY/kD5mIPX7TdD2NAxgP29cC0/1x1.jpg"
+                            }
+                        ]
+                    },
+                    {
+                        "currency": "WON",
+                        "description": "1 DESC",
+                        "price": 5000,
+                        "thumbnails": [
+                            {
+                                "fixedRatio": false,
+                                "imageUrl": "http://k.kakaocdn.net/dn/APR96/btqqH7zLanY/kD5mIPX7TdD2NAxgP29cC0/1x1.jpg"
+                            }
+                        ]
+                    }
+                ],
+                "type": "commerceCard"
+            }
+        }
+        "#;
+        let carousel: Carousel = serde_json::from_str(data).unwrap();
+        println!("Carousel: {:#?}", serde_json::to_string(&carousel).unwrap());
+    }
 
     #[test]
     fn simple_text_json() {
@@ -446,7 +519,7 @@ mod test {
                     "http://k.kakaocdn.net/dn/APR96/btqqH7zLanY/kD5mIPX7TdD2NAxgP29cC0/1x1.jpg"
                 ));
 
-            carousel.add_card(Box::new(basic_card));
+            carousel.add_card(Card::Basic(basic_card));
         }
 
         result.add_output(carousel.build());
@@ -473,7 +546,7 @@ mod test {
                     "http://k.kakaocdn.net/dn/APR96/btqqH7zLanY/kD5mIPX7TdD2NAxgP29cC0/1x1.jpg"
                 ));
 
-            carousel.add_card(Box::new(commerce_card));
+            carousel.add_card(Card::Commerce(commerce_card));
         }
 
         result.add_output(carousel.build());
@@ -501,7 +574,7 @@ mod test {
         //     CallButton::new("msg".to_string()).set_number("010-1234-5678".to_string()),
         // ));
 
-        list_card.add_button(Box::new(ShareButton::new("공유하기".to_string())));
+        list_card.add_button(Button::Share(ShareButton::new("공유하기".to_string())));
 
         // notices.iter().position(|&n| n.date.ne(&today)).unwrap();
 
@@ -514,10 +587,10 @@ mod test {
 
         if notices.len() > 5 {
             label = format!("{}개 더보기", notices.len() - 5);
-            list_card.add_button(Box::new(MsgButton::new(label)));
+            list_card.add_button(Button::Msg(MsgButton::new(label)));
             notices.resize(5, Notice::default());
         } else {
-            list_card.add_button(Box::new(
+            list_card.add_button(Button::Link(
                 LinkButton::new("ajouLink".to_string()).set_link("https://".to_string()),
             ));
         }
@@ -582,7 +655,7 @@ mod test {
         //     CallButton::new("msg".to_string()).set_number("010-1234-5678".to_string()),
         // ));
 
-        list_card.add_button(Box::new(ShareButton::new("공유하기".to_string())));
+        list_card.add_button(Button::Share(ShareButton::new("공유하기".to_string())));
 
         // notices.iter().position(|&n| n.date.ne(&today)).unwrap();
 
@@ -595,10 +668,10 @@ mod test {
 
         if notices.len() > 5 {
             label = format!("{}개 더보기", notices.len() - 5);
-            list_card.add_button(Box::new(MsgButton::new(label)));
+            list_card.add_button(Button::Msg(MsgButton::new(label)));
             notices.resize(5, Notice::default());
         } else {
-            list_card.add_button(Box::new(
+            list_card.add_button(Button::Link(
                 LinkButton::new("ajouLink".to_string()).set_link("https://".to_string()),
             ));
         }
@@ -646,27 +719,6 @@ mod test {
     }
 
     #[test]
-    fn list_item_json() {
-        let mut result = ItemJSON::new();
-
-        result.push(
-            ListItem::new("데이터사이언티스트".to_string())
-                .set_desc("플러스센터".to_string())
-                .set_link("https://some_url".to_string()),
-        );
-        result.push(ListItem::new("제목".to_string()).set_desc("설명".to_string()));
-
-        let header = Header::new("tittlelel".to_string());
-
-        // println!("{:?}", json!(result));
-        println!(
-            "listItem: {}",
-            serde_json::to_string(&result).expect("Woah")
-        );
-        println!("header: {}", serde_json::to_string(&header).expect("Woah"));
-    }
-
-    #[test]
     fn deserialize_test() {
         let mut result = Template::new();
         result.add_qr(QuickReply::new(
@@ -683,7 +735,7 @@ mod test {
                     "http://k.kakaocdn.net/dn/APR96/btqqH7zLanY/kD5mIPX7TdD2NAxgP29cC0/1x1.jpg"
                 ));
 
-            carousel.add_card(Box::new(basic_card));
+            carousel.add_card(Card::Basic(basic_card));
         }
         let simple_text = SimpleText::new(format!("심플 텍스트 테스트"));
         result.add_output(simple_text.build());

@@ -8,9 +8,9 @@ edition = "2018"
 [dependencies]
 rocket = "0.4.10"
 rocket_contrib = { version = "0.4", features = ["handlebars_templates", "tera_templates"]}
-serde = { version = "1.0.126", features = ["derive"] }
-serde_json = "1.0.64"
-serde_derive = "1.0.126"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde_derive = "1.0"
 reqwest = { version = "0.11", features = ["json", "blocking"] }
 tokio = { version = "1", features = ["full"] }
 diesel = { version = "1.4.7", features = ["mysql"] }
@@ -19,7 +19,6 @@ r2d2 = "*"
 r2d2-diesel = "*"
 scraper = "0.12.0"
 chrono = "0.4"
-erased-serde = "0.3"
 unicode-segmentation = "1.8.0"
 
 [profile.dev]

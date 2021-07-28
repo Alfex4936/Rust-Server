@@ -68,13 +68,15 @@ pub fn last_notice_test(_kakao: Json<Value>, conn: Conn) -> Result<Json<Vec<Noti
 
 #[post("/json", format = "json", data = "<kakao>")]
 pub fn json_test(kakao: String) -> Result<Json<Value>, Status> {
-    // println!("{}", kakao["userRequest"]["utterance"].as_str().unwrap()); // 발화문
-
     // println!("what is {:#?}", kakao);
     let mut vec = vec![];
     let json: Template = match serde_json::from_str(&kakao) {
         Ok(t) => t,
-        Err(e) => return Ok(Json(json!({"type": "알 수 없음", "error": e.to_string()}))),
+        Err(e) => {
+            return Ok(Json(
+                json!({"type": "알 수 없음", "error": "SimpleText, BasicCard, ListCard, BasicCard 중 매치되는 데이터가 없습니다.</br>필드를 다시 확인해주세요."}),
+            ))
+        }
     };
 
     // let json: Template = serde_json::from_str(&kakao).map_err(|error| crate::error_status(error));
@@ -84,9 +86,10 @@ pub fn json_test(kakao: String) -> Result<Json<Value>, Status> {
         match check_type(output) {
             Some(t) => vec.push(t),
             _ => {
+                // deny unknown fields 때문에 unreachable
                 return Ok(Json(
-                    json!({"type": "알 수 없음", "error": format!("couldn't identify {}", output)}),
-                ))
+                    json!({"type": "알 수 없음", "error": format!("couldn't identify {:?}", output)}),
+                ));
             }
         }
     }

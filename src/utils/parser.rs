@@ -1,7 +1,7 @@
 use crate::db::models::Notice;
+use crate::kakao_json::basics::Types;
 use reqwest::header::USER_AGENT;
 use scraper::{Html, Selector};
-use serde_json::Value;
 
 const AJOU_LINK: &'static str = "https://www.ajou.ac.kr/kr/ajou/notice.do";
 
@@ -100,7 +100,7 @@ pub fn notice_parse(_nums: Option<usize>) -> Result<Vec<Notice>, reqwest::Error>
     Ok(notices)
 }
 
-pub fn check_type(obj: &Value) -> Option<String> {
+pub fn check_type(obj: &Types) -> Option<String> {
     let types = vec![
         "simpleText",
         "carousel",
@@ -110,12 +110,11 @@ pub fn check_type(obj: &Value) -> Option<String> {
         "commerceCard",
     ];
 
-    for r#type in types {
-        match obj.get(r#type) {
-            Some(obj) => return Some(r#type.to_string()),
-            None => continue,
-        }
+    match obj {
+        Types::Simple(_) => return Some("simpleText".to_string()),
+        Types::Carousel(_) => return Some("carousel".to_string()),
+        Types::Basic(_) => return Some("basicCard".to_string()),
+        Types::List(_) => return Some("listCard".to_string()),
     }
-
     None
 }

@@ -6,8 +6,6 @@ extern crate rocket_contrib;
 
 #[macro_use]
 extern crate diesel;
-// #[macro_use]
-// extern crate diesel_codegen;
 extern crate r2d2;
 extern crate r2d2_diesel;
 
@@ -15,7 +13,6 @@ extern crate r2d2_diesel;
 extern crate serde_derive;
 #[macro_use]
 extern crate serde_json;
-extern crate erased_serde;
 
 extern crate chrono;
 

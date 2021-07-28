@@ -18,14 +18,110 @@
 use serde::{Deserialize, Serialize};
 
 /***** Buttons *****/
-#[allow(patterns_in_fns_without_body)]
-pub trait Button: Serialize {
-    fn new(label: String) -> Self;
-    fn set_label(mut self, label: String) -> Self;
-    fn set_msg(mut self, msg: String) -> Self;
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(untagged)]
+pub enum Button {
+    Call(CallButton),
+    Link(LinkButton),
+    Share(ShareButton),
+    Msg(MsgButton),
 }
 
-#[derive(Serialize)]
+// impl<'de> Deserialize<'de> for Button {
+//     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+//     where
+//         D: Deserializer<'de>,
+//     {
+//         let text: Map<String, Value> = Map::deserialize(deserializer)?;
+//         let mut keys = HashMap::new();
+//         for (key, value) in &text {
+//             let _value = value.as_str().unwrap();
+//             keys.insert(key.to_owned(), _value.to_string());
+//         }
+
+//         let mut button: Button = match text.get("action").unwrap().as_str() {
+//             Some("webLink") => Self::Link(LinkButton::new("label".to_string())),
+//             Some("share") => Self::Share(ShareButton::new("label".to_string())),
+//             Some("message") => Self::Msg(MsgButton::new("label".to_string())),
+//             Some("phone") => Self::Call(CallButton::new("label".to_string())),
+//             _ => Self::Msg(MsgButton::new("label".to_string())),
+//         };
+
+//         for (key, value) in &text {
+//             let _value = value.as_str().unwrap();
+//             match &mut button {
+//                 Self::Link(link) => match link {
+//                     LinkButton {
+//                         ref mut label,
+//                         ref action,
+//                         ref mut web_link_url,
+//                         ref mut message_text,
+//                     } => {
+//                         if let Some(l) = keys.get("label") {
+//                             *label = l.to_string();
+//                         }
+//                         if let Some(l) = keys.get("webLinkUrl") {
+//                             *web_link_url = l.to_string();
+//                         }
+//                         if let Some(l) = keys.get("messageText") {
+//                             *message_text = Some(l.to_string());
+//                         }
+//                     }
+//                 },
+//                 Self::Share(share) => match share {
+//                     ShareButton {
+//                         ref mut label,
+//                         ref action,
+//                         ref mut message_text,
+//                     } => {
+//                         if let Some(l) = keys.get("label") {
+//                             *label = l.to_string();
+//                         }
+//                         if let Some(l) = keys.get("messageText") {
+//                             *message_text = Some(l.to_string());
+//                         }
+//                     }
+//                 },
+//                 Self::Msg(msg) => match msg {
+//                     MsgButton {
+//                         ref mut label,
+//                         ref action,
+//                         ref mut message_text,
+//                     } => {
+//                         if let Some(l) = keys.get("label") {
+//                             *label = l.to_string();
+//                         }
+//                         if let Some(l) = keys.get("messageText") {
+//                             *message_text = Some(l.to_string());
+//                         }
+//                     }
+//                 },
+//                 Self::Call(call) => match call {
+//                     CallButton {
+//                         ref mut label,
+//                         ref action,
+//                         ref mut phone_number,
+//                         ref mut message_text,
+//                     } => {
+//                         if let Some(l) = keys.get("label") {
+//                             *label = l.to_string();
+//                         }
+//                         if let Some(l) = keys.get("phoneNumber") {
+//                             *phone_number = l.to_string();
+//                         }
+//                         if let Some(l) = keys.get("messageText") {
+//                             *message_text = Some(l.to_string());
+//                         }
+//                     }
+//                 },
+//             }
+//         }
+
+//         Ok(button)
+//     }
+// }
+
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 pub struct CallButton {
@@ -41,10 +137,8 @@ impl CallButton {
         self.phone_number = number;
         self
     }
-}
 
-impl Button for CallButton {
-    fn new(label: String) -> Self {
+    pub fn new(label: String) -> Self {
         CallButton {
             label: label,
             action: "phone".to_string(),
@@ -53,18 +147,18 @@ impl Button for CallButton {
         }
     }
 
-    fn set_label(mut self, label: String) -> Self {
+    pub fn set_label(mut self, label: String) -> Self {
         self.label = label;
         self
     }
 
-    fn set_msg(mut self, msg: String) -> Self {
+    pub fn set_msg(mut self, msg: String) -> Self {
         self.message_text = Some(msg);
         self
     }
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 pub struct MsgButton {
@@ -74,8 +168,8 @@ pub struct MsgButton {
     message_text: Option<String>,
 }
 
-impl Button for MsgButton {
-    fn new(label: String) -> Self {
+impl MsgButton {
+    pub fn new(label: String) -> Self {
         MsgButton {
             label: label,
             action: "message".to_string(),
@@ -83,18 +177,18 @@ impl Button for MsgButton {
         }
     }
 
-    fn set_label(mut self, label: String) -> Self {
+    pub fn set_label(mut self, label: String) -> Self {
         self.label = label;
         self
     }
 
-    fn set_msg(mut self, msg: String) -> Self {
+    pub fn set_msg(mut self, msg: String) -> Self {
         self.message_text = Some(msg);
         self
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 pub struct LinkButton {
@@ -110,10 +204,8 @@ impl LinkButton {
         self.web_link_url = link;
         self
     }
-}
 
-impl Button for LinkButton {
-    fn new(label: String) -> Self {
+    pub fn new(label: String) -> Self {
         LinkButton {
             label: label,
             action: "webLink".to_string(),
@@ -122,18 +214,18 @@ impl Button for LinkButton {
         }
     }
 
-    fn set_label(mut self, label: String) -> Self {
+    pub fn set_label(mut self, label: String) -> Self {
         self.label = label;
         self
     }
 
-    fn set_msg(mut self, msg: String) -> Self {
+    pub fn set_msg(mut self, msg: String) -> Self {
         self.message_text = Some(msg);
         self
     }
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 pub struct ShareButton {
@@ -143,8 +235,8 @@ pub struct ShareButton {
     message_text: Option<String>,
 }
 
-impl Button for ShareButton {
-    fn new(label: String) -> Self {
+impl ShareButton {
+    pub fn new(label: String) -> Self {
         ShareButton {
             label: label,
             action: "share".to_string(),
@@ -152,12 +244,12 @@ impl Button for ShareButton {
         }
     }
 
-    fn set_label(mut self, label: String) -> Self {
+    pub fn set_label(mut self, label: String) -> Self {
         self.label = label;
         self
     }
 
-    fn set_msg(mut self, msg: String) -> Self {
+    pub fn set_msg(mut self, msg: String) -> Self {
         self.message_text = Some(msg);
         self
     }
@@ -170,17 +262,15 @@ mod test {
     use super::*;
 
     #[test]
-    fn kakao_json() {
-        let mut buttons: Vec<Box<dyn erased_serde::Serialize>> = Vec::new();
-        buttons.push(Box::new(
-            CallButton::new("LABEL".to_string())
-                .set_label("CALL LABEL".to_string())
-                .set_msg("MESSAGE".to_string()),
-        ));
+    fn button_enum_test() {
+        /*
+        [{"label":"CALL LABEL","action":"phone","phoneNumber":"0","messageText":"MESSAGE"},{"label":"SHARE LABEL","action":"share"},{"label":"MSG LABEL","action":"message"},{"label":"LABEL","action":"webLink","webLinkUrl":"https://"}]
+        */
+        let data = r#"[{"label":"CALL LABEL","action":"phone","phoneNumber":"0","messageText":"MESSAGE"},{"label":"SHARE LABEL","action":"share"},{"label":"MSG LABEL","action":"message"},{"label":"LABEL","action":"webLink","webLinkUrl":"https://"}]"#;
+        let buttons: Vec<Button> = serde_json::from_str(data).unwrap();
 
-        buttons.push(Box::new(ShareButton::new("LABEL".to_string())));
-
-        // println!("{:?}", json!(result));
-        println!("{}", serde_json::to_string(&buttons).expect("Woah"));
+        println!("{:?}", buttons);
+        println!("{}", serde_json::to_string_pretty(&buttons).expect("Woah"));
+        // println!("{}", serde_json::to_string(&buttons).expect("Woah"));
     }
 }
