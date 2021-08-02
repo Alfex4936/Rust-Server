@@ -4,7 +4,9 @@
 
 # Structure
 
-src/routes/ : endpoints
+[chatbot/](https://github.com/Alfex4936/Rust-Server/tree/main/chatbot) : 카카오 챗봇 (actix)
+
+[src/routes/](https://github.com/Alfex4936/Rust-Server/tree/main/src/routes) : endpoints
 
 tests/ : unittest
 

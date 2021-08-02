@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kakao</title>
+    <link rel="stylesheet" href="/kakaotalk.css" />
+    <script src="/kakao.js" defer></script>
+  </head>
+  <body id="chat-screen">
+    <main class="main-screen main-chat">
+      <div class="chat__timestamp">{{ date }}</div>
+      <div class="message-row">
+        <a
+          href="https://github.com/Alfex4936/Rust-Server"
+          target="_blank"
+          rel="noopener"
+          ><img src="https://avatars.githubusercontent.com/u/2356749?v=4"
+        /></a>
+        <div class="message-row__content">
+          <span class="message__author">챗봇</span>
+          <div class="message__info">
+            <span class="message__bubble">어서오세요.</br></br>사용 가능한 명령어:</br><i>set server http://localhost:8000/v1</i></br><i>set endpoint /json</i></span>
+            <button type="button" styles="cursor: default;">Hello</button>
+            <span id="-1" class="message__time">{{ time }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="message-row message-row--own">
+        <div class="message-row__content">
+          <div class="message__info">
+            <span id="1" class="message__bubble">안녕!</span>
+            <span class="message__time">{{ time }}</span>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <form class="reply">
+      <div class="reply__column">
+        <input
+          class="reply-input"
+          type="text"
+          placeholder="메시지를 입력하세요..."
+        />
+        <i class="far fa-smile-wink fa-lg"></i>
+        <button type="submit">
+          <i class="fas fa-arrow-up"></i>
+        </button>
+      </div>
+    </form>
+
+    <script
+      src="https://kit.fontawesome.com/577211be80.js"
+      crossorigin="anonymous"
+    ></script>
+  </body>
+</html>
