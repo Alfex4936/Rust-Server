@@ -113,3 +113,31 @@ pub async fn ask_weather(_: web::Json<Value>) -> impl Responder {
         .content_type("application/json")
         .body(serde_json::to_string(&result).unwrap())
 }
+
+#[post("/schedule")]
+pub async fn get_schedule(conn: web::Data<DbPool>) -> impl Responder {
+    let mut result = Template::new();
+    let mut carousel = Carousel::new().set_type(BasicCard::id());
+
+    let mut rng = rand::thread_rng();
+
+    for sched in query::show_scheds(&conn.get().unwrap()).await.unwrap() {
+        // println!("id: {}, content: {}", sched.id, sched.content);
+
+        let basic_card = BasicCard::new()
+            .set_title(format!("{}", sched.content))
+            .set_desc(format!("{} ~ {}", sched.start_date, sched.end_date))
+            .set_thumbnail(format!(
+                "https://raw.githubusercontent.com/Alfex4936/kakaoChatbot-Ajou/main/imgs/{}.png",
+                CARD_IMAGES[rng.gen_range(0..CARD_IMAGES.len())]
+            ));
+
+        carousel.add_card(basic_card.build_card());
+    }
+
+    result.add_output(carousel.build());
+
+    HttpResponse::Ok()
+        .content_type("application/json")
+        .body(serde_json::to_string(&result).unwrap())
+}

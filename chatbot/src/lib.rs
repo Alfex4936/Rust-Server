@@ -15,6 +15,7 @@ extern crate serde_derive;
 extern crate serde_json;
 
 extern crate chrono;
+extern crate rand;
 
 mod db;
 mod routes;
@@ -23,3 +24,5 @@ mod utils;
 pub use db::connection;
 pub use routes::chatbot;
 pub use routes::test;
+
+pub const CARD_IMAGES: [&'static str; 2] = ["ajou_carousel", "ajou_carousel_1"];
