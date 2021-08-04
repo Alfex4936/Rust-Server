@@ -3,7 +3,6 @@ name = "rustserver"
 version = "1.0.0"
 edition = "2018"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [[bench]]
 name = "parse"
 harness = false
@@ -11,8 +10,8 @@ harness = false
 [dependencies]
 actix-rt = "2"
 actix-http = "2"
-actix-web = "4.0.0-beta.8"
-actix-cors = "0.6.0-beta.2" 
+actix-web = "4.0.0-beta.8" 
+actix-cors = "0.6.0-beta.2"
 handlebars = { version = "4.1.0", features = ["dir_source"] }
 tera = "1.12"
 serde = { version = "1.0", features = ["derive"] }

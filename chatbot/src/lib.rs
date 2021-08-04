@@ -25,4 +25,5 @@ pub use db::connection;
 pub use routes::chatbot;
 pub use routes::test;
 
-pub const CARD_IMAGES: [&'static str; 2] = ["ajou_carousel", "ajou_carousel_1"];
+pub const SERVER: &str = "127.0.0.1:8000";
+pub const CARD_IMAGES: [&str; 2] = ["ajou_carousel", "ajou_carousel_1"];

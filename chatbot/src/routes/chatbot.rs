@@ -1,20 +1,23 @@
 #![allow(proc_macro_derive_resolution_fallback)]
+use crate::db::connection::DbPool;
 use crate::db::models::Notice;
-use crate::db::models::Schedule;
+
 use crate::db::query;
 use crate::utils::parser::{notice_parse, weather_parse, AJOU_LINK, NAVER_WEATHER};
+use crate::CARD_IMAGES;
 
 use kakao_rs::components::basics::*;
 use kakao_rs::components::buttons::*;
 use kakao_rs::components::cards::*;
 
-use actix_web::{post, web, HttpResponse, Responder, Result};
+use actix_web::{post, web, HttpResponse, Responder};
 use chrono::prelude::Local;
+use rand::Rng;
 use serde_json::Value;
 use unicode_segmentation::UnicodeSegmentation;
 
 #[post("/today")]
-pub async fn get_today_notices(_: web::Json<Value>) -> impl Responder {
+pub async fn get_today_notice(_: web::Json<Value>) -> impl Responder {
     // println!("{:#?}", kakao);
     let mut result = Template::new();
     result.add_qr(QuickReply::new(
@@ -50,7 +53,7 @@ pub async fn get_today_notices(_: web::Json<Value>) -> impl Responder {
         ));
     }
 
-    if notices.len() == 0 {
+    if notices.is_empty() {
         list_card.add_item(ListItem::new("공지가 없습니다!".to_string()).set_image(
             "http://k.kakaocdn.net/dn/APR96/btqqH7zLanY/kD5mIPX7TdD2NAxgP29cC0/1x1.jpg".to_string(),
         ));
@@ -125,7 +128,7 @@ pub async fn get_schedule(conn: web::Data<DbPool>) -> impl Responder {
         // println!("id: {}, content: {}", sched.id, sched.content);
 
         let basic_card = BasicCard::new()
-            .set_title(format!("{}", sched.content))
+            .set_title(sched.content.to_string())
             .set_desc(format!("{} ~ {}", sched.start_date, sched.end_date))
             .set_thumbnail(format!(
                 "https://raw.githubusercontent.com/Alfex4936/kakaoChatbot-Ajou/main/imgs/{}.png",

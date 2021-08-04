@@ -15,9 +15,7 @@ pub fn init_pool() -> DbPool {
 
     let manager = ConnectionManager::<MysqlConnection>::new(database_url);
 
-    let pool = r2d2::Pool::builder()
+    r2d2::Pool::builder()
         .build(manager)
-        .expect("Failed to create pool.");
-
-    pool
+        .expect("Failed to create pool.")
 }

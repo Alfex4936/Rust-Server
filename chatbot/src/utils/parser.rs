@@ -2,9 +2,8 @@ use crate::db::models::{Notice, Weather};
 use reqwest::header::USER_AGENT;
 use scraper::{Html, Selector};
 
-pub const AJOU_LINK: &'static str = "https://www.ajou.ac.kr/kr/ajou/notice.do";
-pub const NAVER_WEATHER: &'static str =
-    "https://weather.naver.com/today/02117530?cpName=ACCUWEATHER"; // 아주대 지역 날씨
+pub const AJOU_LINK: &str = "https://www.ajou.ac.kr/kr/ajou/notice.do";
+pub const NAVER_WEATHER: &str = "https://weather.naver.com/today/02117530?cpName=ACCUWEATHER"; // 아주대 지역 날씨
 
 pub async fn notice_parse(_nums: Option<usize>) -> Result<Vec<Notice>, reqwest::Error> {
     let mut ajou =
@@ -44,7 +43,7 @@ pub async fn notice_parse(_nums: Option<usize>) -> Result<Vec<Notice>, reqwest::
     let mut writer_elements = document.select(&writers);
 
     // struct Notice
-    for index in 0..nums_int {
+    for notice in notices.iter_mut() {
         let id_element = id_elements.next().unwrap();
         let id = id_element.text().collect::<Vec<_>>()[0]
             .trim() // " 12345 "
@@ -88,11 +87,11 @@ pub async fn notice_parse(_nums: Option<usize>) -> Result<Vec<Notice>, reqwest::
 
         // title.retain(|c| !r#"~「」"#.contains(c));
 
-        notices[index].id = id;
-        notices[index].title = title;
-        notices[index].link = link;
-        notices[index].date = date;
-        notices[index].writer = writer;
+        (*notice).id = id;
+        (*notice).title = title;
+        (*notice).link = link;
+        (*notice).date = date;
+        (*notice).writer = writer;
     }
     // println!("{:?}", notices);
     Ok(notices)
@@ -185,7 +184,7 @@ pub async fn weather_parse() -> Result<Weather, reqwest::Error> {
     weather.uv = uv;
 
     if icon_classes.contains("night") {
-        icon = icon + "_night";
+        icon += "_night";
     }
 
     weather.icon = format!(
@@ -199,7 +198,6 @@ pub async fn weather_parse() -> Result<Weather, reqwest::Error> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use actix_web::test;
 
     #[actix_rt::test]
     async fn weather_test() {

@@ -5,7 +5,7 @@ use criterion::{criterion_group, criterion_main, Bencher, Criterion};
 use reqwest::header::USER_AGENT;
 use scraper::{Html, Selector};
 
-pub const AJOU_LINK: &'static str = "https://www.ajou.ac.kr/kr/ajou/notice.do";
+pub const AJOU_LINK: &str = "https://www.ajou.ac.kr/kr/ajou/notice.do";
 
 #[derive(Clone, Default)]
 pub struct Notice {

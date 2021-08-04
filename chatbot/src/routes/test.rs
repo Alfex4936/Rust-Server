@@ -5,7 +5,7 @@ use crate::utils::parser::notice_parse;
 use kakao_rs::components::basics::*;
 use kakao_rs::components::buttons::*;
 
-use actix_web::{get, post, web, Error, HttpResponse, HttpResponseBuilder, Responder, Result};
+use actix_web::{get, post, web, Error, HttpResponse, Responder, Result};
 use serde_json::Value;
 
 use crate::db::connection::DbPool;
@@ -59,7 +59,7 @@ pub async fn json_test(kakao: web::Json<Value>) -> impl Responder {
         "어제 공지 보여줘".to_string(),
     ));
 
-    let mut list_card = ListCard::new(format!("리스트 카드 제목!")); // 제목
+    let mut list_card = ListCard::new("리스트 카드 제목!".to_string()); // 제목
 
     list_card.add_button(Button::Msg(MsgButton::new("그냥 텍스트 버튼".to_string())));
 
