@@ -4,7 +4,7 @@ use crate::db::schema::ajou_notices;
 use crate::db::schema::ajou_sched;
 // use diesel::prelude::*;
 
-#[derive(Queryable, AsChangeset, Serialize, Deserialize, Debug, Clone)]
+#[derive(Queryable, AsChangeset, Serialize, Deserialize, Debug, Default, Clone)]
 #[table_name = "ajou_notices"]
 pub struct Notice {
     pub id: i32,
@@ -12,18 +12,6 @@ pub struct Notice {
     pub date: String,
     pub link: String,
     pub writer: String,
-}
-
-impl Default for Notice {
-    fn default() -> Notice {
-        Notice {
-            id: 0,
-            title: "".to_string(),
-            date: "".to_string(),
-            link: "".to_string(),
-            writer: "".to_string(),
-        }
-    }
 }
 
 #[derive(Queryable, AsChangeset, Serialize, Deserialize)]

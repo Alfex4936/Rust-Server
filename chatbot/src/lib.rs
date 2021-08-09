@@ -4,14 +4,13 @@ extern crate actix_http;
 extern crate actix_rt;
 extern crate actix_web;
 
-#[macro_use]
 extern crate r2d2;
 #[macro_use]
 extern crate diesel;
 
 #[macro_use]
 extern crate serde_derive;
-#[macro_use]
+
 extern crate serde_json;
 
 extern crate chrono;

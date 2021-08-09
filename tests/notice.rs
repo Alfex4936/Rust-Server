@@ -1,11 +1,11 @@
 mod common;
 
-use common::*;
+
 
 #[cfg(test)]
 mod test {
     // Note this useful idiom: importing names from outer (for mod tests) scope.
-    use super::*;
+    
 
     #[test]
     fn kakao_post() {

@@ -20,21 +20,15 @@ use unicode_segmentation::UnicodeSegmentation;
 pub async fn get_today_notice(_: web::Json<Value>) -> impl Responder {
     // println!("{:#?}", kakao);
     let mut result = Template::new();
-    result.add_qr(QuickReply::new(
-        "오늘".to_string(),
-        "오늘 공지 보여줘".to_string(),
-    ));
-    result.add_qr(QuickReply::new(
-        "어제".to_string(),
-        "어제 공지 보여줘".to_string(),
-    ));
+    result.add_qr(QuickReply::new("오늘", "오늘 공지 보여줘"));
+    result.add_qr(QuickReply::new("어제", "어제 공지 보여줘"));
 
     let mut notices = notice_parse(Some(30)).await.unwrap();
     let today = Local::now().format("%y.%m.%d").to_string(); // "21.07.20"
 
     let mut list_card = ListCard::new(format!("{}) 오늘 공지", today));
 
-    list_card.add_button(Button::Share(ShareButton::new("공유하기".to_string())));
+    list_card.add_button(Button::Share(ShareButton::new("공유하기")));
 
     // notices.iter().position(|&n| n.date.ne(&today)).unwrap();
 
@@ -43,19 +37,21 @@ pub async fn get_today_notice(_: web::Json<Value>) -> impl Responder {
         .filter(|notice| notice.date.eq(&today))
         .collect();
 
+    // let length = notices.len();
+
     if notices.len() > 5 {
         let label = format!("{}개 더보기", notices.len() - 5);
         list_card.add_button(Button::Msg(MsgButton::new(label)));
         notices.resize(5, Notice::default());
     } else {
         list_card.add_button(Button::Link(
-            LinkButton::new("아주대 공지".to_string()).set_link(AJOU_LINK.to_string()),
+            LinkButton::new("아주대 공지").set_link(AJOU_LINK),
         ));
     }
 
     if notices.is_empty() {
-        list_card.add_item(ListItem::new("공지가 없습니다!".to_string()).set_image(
-            "http://k.kakaocdn.net/dn/APR96/btqqH7zLanY/kD5mIPX7TdD2NAxgP29cC0/1x1.jpg".to_string(),
+        list_card.add_item(ListItem::new("공지가 없습니다!").set_image(
+            "http://k.kakaocdn.net/dn/APR96/btqqH7zLanY/kD5mIPX7TdD2NAxgP29cC0/1x1.jpg",
         ));
     } else {
         for notice in notices.iter_mut() {
@@ -103,11 +99,11 @@ pub async fn ask_weather(_: web::Json<Value>) -> impl Responder {
     let mut result = Template::new();
 
     let basic_card = BasicCard::new()
-        .set_title("[수원 영통구 기준]".to_string())
+        .set_title("[수원 영통구 기준]")
         .set_desc(description)
         .set_thumbnail(weather.icon)
         .add_button(Button::Link(
-            LinkButton::new("자세히".to_string()).set_link(NAVER_WEATHER.to_string()),
+            LinkButton::new("자세히").set_link(NAVER_WEATHER),
         ));
 
     result.add_output(basic_card.build());
@@ -128,7 +124,7 @@ pub async fn get_schedule(conn: web::Data<DbPool>) -> impl Responder {
         // println!("id: {}, content: {}", sched.id, sched.content);
 
         let basic_card = BasicCard::new()
-            .set_title(sched.content.to_string())
+            .set_title(sched.content)
             .set_desc(format!("{} ~ {}", sched.start_date, sched.end_date))
             .set_thumbnail(format!(
                 "https://raw.githubusercontent.com/Alfex4936/kakaoChatbot-Ajou/main/imgs/{}.png",
