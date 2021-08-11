@@ -1,9 +1,12 @@
-use crate::db::models::{Notice, Weather};
+use crate::db::models::{Library, Notice, People, Weather};
 use reqwest::header::USER_AGENT;
 use scraper::{Html, Selector};
+use std::collections::HashMap;
 
 pub const AJOU_LINK: &str = "https://www.ajou.ac.kr/kr/ajou/notice.do";
 pub const NAVER_WEATHER: &str = "https://weather.naver.com/today/02117530?cpName=ACCUWEATHER"; // 아주대 지역 날씨
+pub const AJOU_LIBRARY: &str = env!("AJOU_LIBRARY"); // 아주대 중앙 도서관
+pub const AJOU_PEOPLE: &str = env!("AJOU_PEOPLE"); // 아주대 인물 검색
 
 pub async fn notice_parse(_nums: Option<usize>) -> Result<Vec<Notice>, reqwest::Error> {
     let mut ajou =
@@ -195,6 +198,39 @@ pub async fn weather_parse() -> Result<Weather, reqwest::Error> {
     Ok(weather)
 }
 
+pub async fn library_parse() -> Result<Library, reqwest::Error> {
+    let client = reqwest::Client::builder()
+        .danger_accept_invalid_certs(true)
+        .build()?;
+
+    // header 없이 보내면 404
+    let res = client.get(AJOU_LIBRARY).header(USER_AGENT, "User-Agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.114 Safari/537.36").send().await?;
+    let body = res.text().await?;
+
+    // println!("Body:\n{}", body);
+
+    let library: Library = serde_json::from_str(&body).unwrap();
+    Ok(library)
+}
+
+pub async fn people_parse(keyword: &String) -> Result<People, reqwest::Error> {
+    let client = reqwest::Client::builder()
+        .danger_accept_invalid_certs(true)
+        .build()?;
+
+    let mut map = HashMap::new();
+    map.insert("keyword", keyword);
+
+    // header 없이 보내면 404
+    let res = client.post(AJOU_PEOPLE).header(USER_AGENT, "User-Agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.114 Safari/537.36").json(&map).send().await?;
+    let body = res.text().await?;
+
+    // println!("Body:\n{}", body);
+
+    let people: People = serde_json::from_str(&body).unwrap();
+    Ok(people)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -203,5 +239,11 @@ mod tests {
     async fn weather_test() {
         let weather = weather_parse().await.unwrap();
         println!("{:#?}", weather);
+    }
+
+    #[actix_rt::test]
+    async fn library_test() {
+        let library = library_parse().await.unwrap();
+        println!("{:#?}", library);
     }
 }

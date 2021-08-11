@@ -3,7 +3,9 @@ use crate::db::connection::DbPool;
 use crate::db::models::Notice;
 
 use crate::db::query;
-use crate::utils::parser::{notice_parse, weather_parse, AJOU_LINK, NAVER_WEATHER};
+use crate::utils::parser::{
+    library_parse, notice_parse, people_parse, weather_parse, AJOU_LINK, NAVER_WEATHER,
+};
 use crate::CARD_IMAGES;
 
 use kakao_rs::components::basics::*;
@@ -15,6 +17,8 @@ use chrono::prelude::Local;
 use rand::Rng;
 use serde_json::Value;
 use unicode_segmentation::UnicodeSegmentation;
+
+const INTEL: &str = "031-219-";
 
 #[post("/today")]
 pub async fn get_today_notice(_: web::Json<Value>) -> impl Responder {
@@ -130,6 +134,81 @@ pub async fn get_schedule(conn: web::Data<DbPool>) -> impl Responder {
                 "https://raw.githubusercontent.com/Alfex4936/kakaoChatbot-Ajou/main/imgs/{}.png",
                 CARD_IMAGES[rng.gen_range(0..CARD_IMAGES.len())]
             ));
+
+        carousel.add_card(basic_card.build_card());
+    }
+
+    result.add_output(carousel.build());
+
+    HttpResponse::Ok()
+        .content_type("application/json")
+        .body(serde_json::to_string(&result).unwrap())
+}
+
+#[post("/library")]
+pub async fn get_library() -> impl Responder {
+    let mut result = Template::new();
+    let library = library_parse().await.unwrap();
+    let mut description = vec![];
+    for data in &library.data.list {
+        description.push(format!(
+            "{}: {}/{} (잔여/전체)",
+            data.name, data.available, data.active_total
+        ));
+    }
+
+    let basic_card = BasicCard::new()
+        .set_title("[중앙도서관]")
+        .set_desc(description.join(" "))
+        .add_button(Button::Link(
+            LinkButton::new("중앙도서관 홈페이지").set_link("https://library.ajou.ac.kr/#/"),
+        ));
+
+    result.add_output(basic_card.build());
+
+    HttpResponse::Ok()
+        .content_type("application/json")
+        .body(serde_json::to_string(&result).unwrap())
+}
+
+#[post("/people")]
+pub async fn get_people(kakao: web::Json<Value>) -> impl Responder {
+    let mut keyword = kakao["action"]["params"]["search"]
+        .as_str()
+        .unwrap()
+        .to_string();
+    keyword.retain(|c| !c.is_whitespace());
+
+    let mut result = Template::new();
+    let mut carousel = Carousel::new();
+
+    let people = people_parse(&keyword).await.unwrap();
+    if people.phone_number.is_empty() {
+        result.add_output(SimpleText::new(format!("{} 검색 결과가 없습니다.", keyword)).build());
+        return HttpResponse::Ok()
+            .content_type("application/json")
+            .body(serde_json::to_string(&result).unwrap());
+    } // if greater than 10
+
+    for person in &people.phone_number {
+        let basic_card = BasicCard::new()
+            .set_title(format!(
+                "{} ({})",
+                person.kor_nm.as_ref().unwrap_or(&"X".to_string()),
+                person.email.as_ref().unwrap_or(&"X".to_string())
+            ))
+            .set_desc(format!(
+                "전화번호: {}\n부서명: {}",
+                INTEL.to_string() + &person.tel_no.as_ref().unwrap_or(&"X".to_string()),
+                person.dept_nm.as_ref().unwrap_or(&"X".to_string())
+            ))
+            .add_button(Button::Call(CallButton::new("전화").set_number(
+                INTEL.to_string() + &person.tel_no.as_ref().unwrap_or(&"X".to_string()),
+            )))
+            .add_button(Button::Link(LinkButton::new("이메일").set_link(format!(
+                "mailto:{}?subject=안녕하세요",
+                person.email.as_ref().unwrap_or(&"X".to_string())
+            ))));
 
         carousel.add_card(basic_card.build_card());
     }

@@ -1,7 +1,6 @@
 use actix_cors::Cors;
 use actix_web::{middleware, web, App, HttpServer};
 
-
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     std::env::set_var("RUST_LOG", "info,actix_web=info");
@@ -17,11 +16,13 @@ async fn main() -> std::io::Result<()> {
             .app_data(web::Data::new(rustserver::connection::init_pool())) // <- store db pool in app state
             .wrap(middleware::Logger::default())
             .service(rustserver::test::hello)
-            .service(rustserver::test::db_test)
-            .service(rustserver::test::get_notices)
+            // .service(rustserver::test::db_test)
+            // .service(rustserver::test::get_notices)
             .service(rustserver::chatbot::ask_weather)
             .service(rustserver::chatbot::get_today_notice)
             .service(rustserver::chatbot::get_schedule)
+            .service(rustserver::chatbot::get_library)
+            .service(rustserver::chatbot::get_people)
     })
     .bind(rustserver::SERVER)?
     .run()
