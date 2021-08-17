@@ -3,3 +3,6 @@ ttest:
 
 test:
 	cargo test
+
+single:
+	cargo test -- --nocapture $(name)
