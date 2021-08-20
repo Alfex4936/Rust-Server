@@ -21,8 +21,9 @@ mod routes;
 mod utils;
 
 pub use db::connection;
-pub use routes::chatbot;
-pub use routes::test;
+pub use routes::info;
+pub use routes::notice;
+pub use routes::route;
 
-pub const SERVER: &str = "127.0.0.1:8000";
+pub const SERVER: &str = "0.0.0.0:8008";
 pub const CARD_IMAGES: [&str; 2] = ["ajou_carousel", "ajou_carousel_1"];

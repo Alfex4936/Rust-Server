@@ -40,6 +40,28 @@ pub struct Weather {
     pub icon: String,
 }
 
+// #[derive(Debug, Deserialize)]
+// #[serde(rename_all = "camelCase")]
+// pub struct Meal {
+//     pub msg_code: String,
+//     #[serde(rename = "p018Text")]
+//     pub data: MealContent,
+// }
+
+// #[derive(Debug, Deserialize)]
+// #[serde(rename_all = "camelCase")]
+// /// 63 기숙사, 220 학생, 221 교직원
+// pub struct MealContent {
+//     pub breakfast: String, //아침
+//     pub lunch: String,     // 점심
+//     pub dinner: String,    // 저녁
+//     pub snack_bar: String, // 분식
+//     #[serde(rename = "menuDt")]
+//     pub date: String, // 날짜
+//     #[serde(rename = "restaurantNm")]
+//     pub name: String, // 식당 이름 (교직원식당(생활관 2층))
+// }
+
 #[derive(Debug, Deserialize)]
 pub struct Library {
     code: String,

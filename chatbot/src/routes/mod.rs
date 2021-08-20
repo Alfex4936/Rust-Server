@@ -1,2 +1,3 @@
-pub mod chatbot;
-pub mod test;
+pub mod info;
+pub mod notice;
+pub mod route;

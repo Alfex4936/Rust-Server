@@ -16,7 +16,10 @@ pub async fn show_scheds(conn: &MysqlConnection) -> QueryResult<Vec<Schedule>> {
 }
 
 // Load notices from MySQL db not from homepage
-pub fn get_notices(conn: &MysqlConnection, _date: String) -> QueryResult<Vec<Notice>> {
+pub async fn get_notices_by_date(
+    conn: &MysqlConnection,
+    _date: String,
+) -> QueryResult<Vec<Notice>> {
     // let query = format!(
     //     "SELECT * FROM ajou_notices WHERE date = {} ORDER BY id DESC",
     //     _date

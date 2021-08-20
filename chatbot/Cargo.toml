@@ -24,11 +24,9 @@ diesel = { version = "1.4", features = ["mysql", "r2d2"] }
 scraper = "0.12.0"
 chrono = "0.4"
 unicode-segmentation = "1.8.0"
-kakao-rs = "0.2.6"
+kakao-rs = "0.2.8"
 rand = "0.8"
-
-[build-dependencies]
-protoc-rust = "2.25"
+async-graphql-actix-web = "2.9.10"
 
 [dev-dependencies]
 criterion = "0.3"

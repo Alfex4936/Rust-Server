@@ -1,4 +1,4 @@
-use crate::db::models::{Library, Notice, People, Weather};
+use crate::db::models::{Library, Meal, Notice, People, Weather};
 use reqwest::header::USER_AGENT;
 use scraper::{Html, Selector};
 use std::collections::HashMap;
@@ -7,23 +7,39 @@ pub const AJOU_LINK: &str = "https://www.ajou.ac.kr/kr/ajou/notice.do";
 pub const NAVER_WEATHER: &str = "https://weather.naver.com/today/02117530?cpName=ACCUWEATHER"; // 아주대 지역 날씨
 pub const AJOU_LIBRARY: &str = env!("AJOU_LIBRARY"); // 아주대 중앙 도서관
 pub const AJOU_PEOPLE: &str = env!("AJOU_PEOPLE"); // 아주대 인물 검색
+pub const AJOU_MEAL: &str = env!("AJOU_MEAL"); // 아주대 학식
 
-pub async fn notice_parse(_nums: Option<usize>) -> Result<Vec<Notice>, reqwest::Error> {
-    let mut ajou =
-        "https://www.ajou.ac.kr/kr/ajou/notice.do?mode=list&article.offset=0&articleLimit="
-            .to_string();
+pub async fn notice_parse(
+    query_option: &str,
+    _nums: Option<usize>,
+) -> Result<Vec<Notice>, reqwest::Error> {
+    // let query = "?mode=list&article.offset=0&articleLimit=";
 
-    let nums_int = _nums.unwrap_or(5);
-    let nums_str = nums_int.to_string();
+    // query = ?mode=list&srSearchKey=&srSearchVal=키워드&article.offset=0&articleLimit=
 
-    ajou.push_str(&nums_str);
+    let string;
+    let query = match query_option {
+        "ajou" => "?mode=list&article.offset=0&articleLimit=",
+        _ => {
+            string = format!(
+                "?mode=list&srSearchKey=&srSearchVal={}&article.offset=0&articleLimit=",
+                query_option
+            ); // format! has dropped so gotta save it to temp var
+            &string
+        }
+    };
+
+    let nums_int = _nums.unwrap_or(7);
+    // ajou.push_str(&nums_str);
+
+    let url = [AJOU_LINK, query, &nums_int.to_string()].concat();
 
     let client = reqwest::Client::builder()
         .danger_accept_invalid_certs(true)
         .build()?;
 
     // header 없이 보내면 404
-    let res = client.get(ajou).header(USER_AGENT, "User-Agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.114 Safari/537.36").send().await?;
+    let res = client.get(url).header(USER_AGENT, "User-Agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.114 Safari/537.36").send().await?;
     let body = res.text().await?;
 
     // println!("Body:\n{}", body);
@@ -38,7 +54,8 @@ pub async fn notice_parse(_nums: Option<usize>) -> Result<Vec<Notice>, reqwest::
     let dates = Selector::parse("span.b-date").unwrap();
     let writers = Selector::parse("span.b-writer").unwrap();
 
-    let mut notices = vec![Notice::default(); nums_int];
+    // let mut notices = vec![Notice::default(); nums_int];
+    let mut notices: Vec<Notice> = vec![];
 
     let mut id_elements = document.select(&ids);
     let mut title_elements = document.select(&titles);
@@ -46,8 +63,12 @@ pub async fn notice_parse(_nums: Option<usize>) -> Result<Vec<Notice>, reqwest::
     let mut writer_elements = document.select(&writers);
 
     // struct Notice
-    for notice in notices.iter_mut() {
-        let id_element = id_elements.next().unwrap();
+    loop {
+        let id_element = match id_elements.next() {
+            Some(item) => item,
+            None => break,
+        }; // cant get id_elements length...
+
         let id = id_element.text().collect::<Vec<_>>()[0]
             .trim() // " 12345 "
             .parse::<i32>()
@@ -90,11 +111,21 @@ pub async fn notice_parse(_nums: Option<usize>) -> Result<Vec<Notice>, reqwest::
 
         // title.retain(|c| !r#"~「」"#.contains(c));
 
-        (*notice).id = id;
-        (*notice).title = title;
-        (*notice).link = link;
-        (*notice).date = date;
-        (*notice).writer = writer;
+        let notice = Notice {
+            id: id,
+            title: title,
+            link: link,
+            date: date,
+            writer: writer,
+        };
+
+        notices.push(notice);
+
+        // (*notice).id = id;
+        // (*notice).title = title;
+        // (*notice).link = link;
+        // (*notice).date = date;
+        // (*notice).writer = writer;
     }
     // println!("{:?}", notices);
     Ok(notices)
@@ -230,6 +261,38 @@ pub async fn people_parse(keyword: &String) -> Result<People, reqwest::Error> {
     let people: People = serde_json::from_str(&body).unwrap();
     Ok(people)
 }
+
+// pub async fn meal_parse() -> Result<Meal, reqwest::Error> {
+//     let client = reqwest::Client::builder()
+//         .danger_accept_invalid_certs(true)
+//         .build()?;
+
+//     // header 없이 보내면 404
+//     let res = client.get(AJOU_MEAL).header(USER_AGENT, "User-Agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.114 Safari/537.36").send().await?;
+//     let body = res.text().await?;
+
+//     // println!("Body:\n{}", body);
+
+//     let mut meal: Meal = serde_json::from_str(&body).unwrap();
+
+//     if meal.data.is_empty() {
+//         meal.msg_code = "empty".to_string();
+//     } else {
+//         meal.data.breakfast = meal
+//             .data
+//             .breakfast
+//             .chars()
+//             .map(|x| match x {
+//                 '!' => '?',
+//                 'A'..='Z' => 'X',
+//                 'a'..='z' => 'x',
+//                 _ => x,
+//             })
+//             .collect();
+//     }
+
+//     Ok(meal)
+// }
 
 #[cfg(test)]
 mod tests {
