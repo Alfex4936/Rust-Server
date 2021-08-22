@@ -94,14 +94,14 @@ pub struct LibraryList {
     total: u32,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct People {
     msg_code: String,
     pub phone_number: Vec<PeopleList>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Default, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct PeopleList {
     // 전부 None일 수도...

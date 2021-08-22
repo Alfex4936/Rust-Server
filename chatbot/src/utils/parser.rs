@@ -1,4 +1,4 @@
-use crate::db::models::{Library, Meal, Notice, People, Weather};
+use crate::db::models::{Library, Notice, People, Weather};
 use reqwest::header::USER_AGENT;
 use scraper::{Html, Selector};
 use std::collections::HashMap;
@@ -7,7 +7,7 @@ pub const AJOU_LINK: &str = "https://www.ajou.ac.kr/kr/ajou/notice.do";
 pub const NAVER_WEATHER: &str = "https://weather.naver.com/today/02117530?cpName=ACCUWEATHER"; // 아주대 지역 날씨
 pub const AJOU_LIBRARY: &str = env!("AJOU_LIBRARY"); // 아주대 중앙 도서관
 pub const AJOU_PEOPLE: &str = env!("AJOU_PEOPLE"); // 아주대 인물 검색
-pub const AJOU_MEAL: &str = env!("AJOU_MEAL"); // 아주대 학식
+                                                   // pub const AJOU_MEAL: &str = env!("AJOU_MEAL"); // 아주대 학식
 
 pub async fn notice_parse(
     query_option: &str,

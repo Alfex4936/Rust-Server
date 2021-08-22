@@ -106,12 +106,14 @@ pub async fn get_people(kakao: web::Json<Value>) -> impl Responder {
     let mut result = Template::new();
     let mut carousel = Carousel::new();
 
-    let people = people_parse(&keyword).await.unwrap();
+    let mut people = people_parse(&keyword).await.unwrap();
     if people.phone_number.is_empty() {
         result.add_output(SimpleText::new(format!("{} 검색 결과가 없습니다.", keyword)).build());
         return HttpResponse::Ok()
             .content_type("application/json")
             .body(serde_json::to_string(&result).unwrap());
+    } else if people.phone_number.len() > 10 {
+        people.phone_number.resize(10, Default::default());
     } // if greater than 10
 
     for person in &people.phone_number {

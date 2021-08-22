@@ -1,11 +1,7 @@
 #![allow(proc_macro_derive_resolution_fallback)]
-use crate::db::models::Notice;
-use crate::db::query;
 use crate::utils::parser::notice_parse;
 
-use actix_web::{get, web, Error, HttpResponse, Responder, Result};
-
-use crate::db::connection::DbPool;
+use actix_web::{get, web, HttpResponse, Responder};
 
 // #[get("/")]
 // pub async fn hello() -> impl Responder {
