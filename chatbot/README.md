@@ -6,10 +6,14 @@ async
 
 자가 제작 모듈 사용 ([kakao-rs](https://github.com/Alfex4936/kakao-rs))
 
+![chatbot](https://user-images.githubusercontent.com/2356749/130390387-825e9efa-7e83-4d71-bb3e-73a28cc9321d.gif)
+
 # Structure
 
 src/db/ : DAO
+
 src/routes/ : endpoints
+
 src/utils/ : HTML parser
 
 # Endpoints
