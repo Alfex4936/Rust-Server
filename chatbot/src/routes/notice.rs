@@ -99,6 +99,10 @@ pub async fn get_today_notice(_: web::Json<Value>) -> impl Responder {
 
     // let length = notices.len();
 
+    if !notices.is_empty() {
+        result.add_output(SimpleText::new(format!("오늘 공지 총 {}개", notices.len())).build());
+    }
+
     if notices.len() > 5 {
         let label = format!("{}개 더보기", notices.len() - 5);
         list_card.add_button(Button::Msg(MsgButton::new(label).set_msg("더보기")));
@@ -236,15 +240,15 @@ pub async fn get_yesterday_notice(conn: web::Data<DbPool>) -> impl Responder {
     } else {
         list_card.add_button(Button::Share(ShareButton::new("공유하기")));
         for notice in notices.iter_mut() {
-            if notice.title.graphemes(true).count() > 35 {
-                notice.title = UnicodeSegmentation::grapheme_indices(notice.title.as_str(), true)
-                    .enumerate()
-                    .filter(|&(i, _)| i < 32)
-                    .map(|(_, (_, s))| s)
-                    .collect::<Vec<&str>>()
-                    .join("")
-                    + "...";
-            }
+            // if notice.title.graphemes(true).count() > 35 {
+            //     notice.title = UnicodeSegmentation::grapheme_indices(notice.title.as_str(), true)
+            //         .enumerate()
+            //         .filter(|&(i, _)| i < 32)
+            //         .map(|(_, (_, s))| s)
+            //         .collect::<Vec<&str>>()
+            //         .join("")
+            //         + "...";
+            // }
             let description = format!(
                 "{} {}",
                 notice.writer,

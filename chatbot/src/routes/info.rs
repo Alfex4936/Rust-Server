@@ -114,6 +114,7 @@ pub async fn get_people(kakao: web::Json<Value>) -> impl Responder {
             .content_type("application/json")
             .body(serde_json::to_string(&result).unwrap());
     } else if people.phone_number.len() > 10 {
+        result.add_output(SimpleText::new("10개의 검색 결과만 불러왔습니다.").build());
         people.phone_number.resize(10, Default::default());
     } // if greater than 10
 
