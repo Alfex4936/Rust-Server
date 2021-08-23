@@ -12,10 +12,31 @@ use kakao_rs::components::cards::*;
 use actix_web::{post, web, HttpResponse, Responder};
 use chrono::prelude::Local;
 use chrono::Duration;
+use lazy_static::lazy_static;
 use serde_json::Value;
 use unicode_segmentation::UnicodeSegmentation;
 
 use std::collections::HashMap;
+
+lazy_static! {
+    static ref CATEGORIES: HashMap<&'static str, u32> = {
+        let mut m = HashMap::new();
+        m.insert("학사", 1);
+        m.insert("비교과", 2);
+        m.insert("장학", 3);
+        m.insert("학술", 4);
+        m.insert("입학", 5);
+        m.insert("취업", 6);
+        m.insert("사무", 7);
+        m.insert("기타", 8);
+        m.insert("행사", 166);
+        m.insert("파란학기제", 167);
+        m.insert("파란학기", 167);
+        m.insert("학사일정", 168);
+        m.insert("학사 일정", 168);
+        m
+    };
+}
 
 #[post("/notice/last")]
 pub async fn get_last_notice() -> impl Responder {
@@ -95,15 +116,15 @@ pub async fn get_today_notice(_: web::Json<Value>) -> impl Responder {
     } else {
         list_card.add_button(Button::Share(ShareButton::new("공유하기")));
         for notice in notices.iter_mut() {
-            if notice.title.graphemes(true).count() > 35 {
-                notice.title = UnicodeSegmentation::grapheme_indices(notice.title.as_str(), true)
-                    .enumerate()
-                    .filter(|&(i, _)| i < 32)
-                    .map(|(_, (_, s))| s)
-                    .collect::<Vec<&str>>()
-                    .join("")
-                    + "...";
-            }
+            // if notice.title.graphemes(true).count() > 35 {
+            //     notice.title = UnicodeSegmentation::grapheme_indices(notice.title.as_str(), true)
+            //         .enumerate()
+            //         .filter(|&(i, _)| i < 32)
+            //         .map(|(_, (_, s))| s)
+            //         .collect::<Vec<&str>>()
+            //         .join("")
+            //         + "...";
+            // }
             let description = format!(
                 "{} {}",
                 notice.writer,
@@ -197,8 +218,6 @@ pub async fn get_yesterday_notice(conn: web::Data<DbPool>) -> impl Responder {
 
     let mut list_card = ListCard::new(format!("{}) 어제 공지", yesterday));
 
-    list_card.add_button(Button::Share(ShareButton::new("공유하기")));
-
     // let length = notices.len();
 
     let label: String;
@@ -215,6 +234,7 @@ pub async fn get_yesterday_notice(conn: web::Data<DbPool>) -> impl Responder {
             "http://k.kakaocdn.net/dn/APR96/btqqH7zLanY/kD5mIPX7TdD2NAxgP29cC0/1x1.jpg",
         ));
     } else {
+        list_card.add_button(Button::Share(ShareButton::new("공유하기")));
         for notice in notices.iter_mut() {
             if notice.title.graphemes(true).count() > 35 {
                 notice.title = UnicodeSegmentation::grapheme_indices(notice.title.as_str(), true)
@@ -358,26 +378,26 @@ pub async fn get_category_notice(kakao: web::Json<Value>) -> impl Responder {
         }
     };
 
-    let categories: HashMap<&str, i32> = [
-        ("학사", 1),
-        ("비교과", 2),
-        ("장학", 3),
-        ("학술", 4),
-        ("입학", 5),
-        ("취업", 6),
-        ("사무", 7),
-        ("기타", 8),
-        ("행사", 166),
-        ("파란학기제", 167),
-        ("파란학기", 167),
-        ("학사일정", 168),
-        ("학사 일정", 168),
-    ]
-    .iter()
-    .cloned()
-    .collect();
+    // let categories: HashMap<&str, i32> = [
+    //     ("학사", 1),
+    //     ("비교과", 2),
+    //     ("장학", 3),
+    //     ("학술", 4),
+    //     ("입학", 5),
+    //     ("취업", 6),
+    //     ("사무", 7),
+    //     ("기타", 8),
+    //     ("행사", 166),
+    //     ("파란학기제", 167),
+    //     ("파란학기", 167),
+    //     ("학사일정", 168),
+    //     ("학사 일정", 168),
+    // ]
+    // .iter()
+    // .cloned()
+    // .collect();
 
-    result.add_qr(QuickReply::new("검색", "검색"));
+    result.add_qr(QuickReply::new("카테", "ㅋㅌ"));
 
     let mut notices = notice_parse("ajou", Some(5)).await.unwrap();
     if notices.is_empty() {
@@ -395,7 +415,7 @@ pub async fn get_category_notice(kakao: web::Json<Value>) -> impl Responder {
     list_card.add_button(Button::Link(LinkButton::new(keyword).set_link(format!(
         "{}?mode=list&srCategoryId={}",
         AJOU_LINK,
-        categories.get(keyword).unwrap()
+        CATEGORIES.get(keyword).unwrap()
     ))));
 
     for notice in notices.iter_mut() {

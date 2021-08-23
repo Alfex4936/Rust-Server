@@ -83,11 +83,12 @@ pub async fn get_library() -> impl Responder {
 
     let basic_card = BasicCard::new()
         .set_title("[중앙도서관]")
-        .set_desc(description.join(" "))
+        .set_desc(description.join("\n"))
         .add_button(Button::Link(
             LinkButton::new("중앙도서관 홈페이지").set_link("https://library.ajou.ac.kr/#/"),
         ));
 
+    result.add_output(SimpleText::new("현재 중앙 도서관 좌석 현황입니다!").build());
     result.add_output(basic_card.build());
 
     HttpResponse::Ok()
@@ -125,7 +126,7 @@ pub async fn get_people(kakao: web::Json<Value>) -> impl Responder {
             ))
             .set_desc(format!(
                 "전화번호: {}\n부서명: {}",
-                INTEL.to_string() + &person.tel_no.as_ref().unwrap_or(&"X".to_string()),
+                INTEL.to_string() + person.tel_no.as_ref().unwrap_or(&"X".to_string()),
                 person.dept_nm.as_ref().unwrap_or(&"X".to_string())
             ))
             // .add_button(Button::Call(CallButton::new("전화").set_number(
@@ -133,7 +134,7 @@ pub async fn get_people(kakao: web::Json<Value>) -> impl Responder {
             // )))
             .add_button(Button::init_call_button(
                 "전화",
-                &(INTEL.to_string() + &person.tel_no.as_ref().unwrap_or(&"X".to_string())),
+                &(INTEL.to_string() + person.tel_no.as_ref().unwrap_or(&"X".to_string())),
             ))
             .add_button(Button::Link(LinkButton::new("이메일").set_link(format!(
                 "mailto:{}?subject=안녕하세요",

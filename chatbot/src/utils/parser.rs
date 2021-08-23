@@ -3,6 +3,8 @@ use reqwest::header::USER_AGENT;
 use scraper::{Html, Selector};
 use std::collections::HashMap;
 
+use crate::MY_USER_AGENT;
+
 pub const AJOU_LINK: &str = "https://www.ajou.ac.kr/kr/ajou/notice.do";
 pub const NAVER_WEATHER: &str = "https://weather.naver.com/today/02117530?cpName=ACCUWEATHER"; // 아주대 지역 날씨
 pub const AJOU_LIBRARY: &str = env!("AJOU_LIBRARY"); // 아주대 중앙 도서관
@@ -39,7 +41,11 @@ pub async fn notice_parse(
         .build()?;
 
     // header 없이 보내면 404
-    let res = client.get(url).header(USER_AGENT, "User-Agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.114 Safari/537.36").send().await?;
+    let res = client
+        .get(url)
+        .header(USER_AGENT, MY_USER_AGENT)
+        .send()
+        .await?;
     let body = res.text().await?;
 
     // println!("Body:\n{}", body);
@@ -63,11 +69,11 @@ pub async fn notice_parse(
     let mut writer_elements = document.select(&writers);
 
     // struct Notice
-    loop {
-        let id_element = match id_elements.next() {
-            Some(item) => item,
-            None => break,
-        }; // cant get id_elements length...
+    while let Some(id_element) = id_elements.next() {
+        // let id_element = match id_elements.next() {
+        //     Some(item) => item,
+        //     None => break,
+        // }; // cant get id_elements length...
 
         let id = id_element.text().collect::<Vec<_>>()[0]
             .trim() // " 12345 "
@@ -112,11 +118,11 @@ pub async fn notice_parse(
         // title.retain(|c| !r#"~「」"#.contains(c));
 
         let notice = Notice {
-            id: id,
-            title: title,
-            link: link,
-            date: date,
-            writer: writer,
+            id,
+            title,
+            link,
+            date,
+            writer,
         };
 
         notices.push(notice);
@@ -235,7 +241,11 @@ pub async fn library_parse() -> Result<Library, reqwest::Error> {
         .build()?;
 
     // header 없이 보내면 404
-    let res = client.get(AJOU_LIBRARY).header(USER_AGENT, "User-Agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.114 Safari/537.36").send().await?;
+    let res = client
+        .get(AJOU_LIBRARY)
+        .header(USER_AGENT, MY_USER_AGENT)
+        .send()
+        .await?;
     let body = res.text().await?;
 
     // println!("Body:\n{}", body);
@@ -244,7 +254,7 @@ pub async fn library_parse() -> Result<Library, reqwest::Error> {
     Ok(library)
 }
 
-pub async fn people_parse(keyword: &String) -> Result<People, reqwest::Error> {
+pub async fn people_parse(keyword: &str) -> Result<People, reqwest::Error> {
     let client = reqwest::Client::builder()
         .danger_accept_invalid_certs(true)
         .build()?;
@@ -253,7 +263,12 @@ pub async fn people_parse(keyword: &String) -> Result<People, reqwest::Error> {
     map.insert("keyword", keyword);
 
     // header 없이 보내면 404
-    let res = client.post(AJOU_PEOPLE).header(USER_AGENT, "User-Agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.114 Safari/537.36").json(&map).send().await?;
+    let res = client
+        .post(AJOU_PEOPLE)
+        .header(USER_AGENT, MY_USER_AGENT)
+        .json(&map)
+        .send()
+        .await?;
     let body = res.text().await?;
 
     // println!("Body:\n{}", body);

@@ -12,8 +12,8 @@ actix-rt = "2"
 actix-http = "2"
 actix-web = "4.0.0-beta.8" 
 actix-cors = "0.6.0-beta.2"
-handlebars = { version = "4.1.0", features = ["dir_source"] }
-tera = "1.12"
+# handlebars = { version = "4.1.0", features = ["dir_source"] }
+# tera = "1.12"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serde_derive = "1.0"
@@ -26,7 +26,7 @@ chrono = "0.4"
 unicode-segmentation = "1.8.0"
 kakao-rs = "0.2.8"
 rand = "0.8"
-async-graphql-actix-web = "2.9.10"
+lazy_static = "1.4.0"
 
 [dev-dependencies]
 criterion = "0.3"
