@@ -1,9 +1,8 @@
 use crate::db::models::{Library, Notice, People, Weather};
+use crate::MY_USER_AGENT;
 use reqwest::header::USER_AGENT;
 use scraper::{Html, Selector};
 use std::collections::HashMap;
-
-use crate::MY_USER_AGENT;
 
 pub const AJOU_LINK: &str = "https://www.ajou.ac.kr/kr/ajou/notice.do";
 pub const NAVER_WEATHER: &str = "https://weather.naver.com/today/02117530?cpName=ACCUWEATHER"; // 아주대 지역 날씨
@@ -95,8 +94,10 @@ pub async fn notice_parse(
 
         let mut title = inner_a.value().attr("title").unwrap().to_string();
         let link = AJOU_LINK.to_string() + inner_a.value().attr("href").unwrap();
+
         // Check duplication. title: [writer] blah -> title: [blah]
         let dup = "[".to_string() + &writer + "]";
+
         if title.contains(&dup) {
             title = title.replace(&dup, "");
             // title.replace_range(0..dup.len(), "");
@@ -142,7 +143,6 @@ pub async fn weather_parse() -> Result<Weather, reqwest::Error> {
         .danger_accept_invalid_certs(true)
         .build()?;
 
-    // header 없이 보내면 404
     let res = client.get(NAVER_WEATHER).header(USER_AGENT, "User-Agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.114 Safari/537.36").send().await?;
     let body = res.text().await?;
 

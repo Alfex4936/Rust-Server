@@ -1,11 +1,15 @@
 #[macro_use]
 extern crate criterion;
+extern crate pprof;
 
 use criterion::{criterion_group, criterion_main, Bencher, Criterion};
+use pprof::criterion::{Output, PProfProfiler};
+
 use reqwest::header::USER_AGENT;
 use scraper::{Html, Selector};
 
 pub const AJOU_LINK: &str = "https://www.ajou.ac.kr/kr/ajou/notice.do";
+pub const MY_USER_AGENT: &str = "User-Agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.114 Safari/537.36";
 
 #[derive(Clone, Default)]
 pub struct Notice {
@@ -16,23 +20,38 @@ pub struct Notice {
     pub writer: String,
 }
 
-pub fn notice_parse(_nums: Option<usize>) -> Result<Vec<Notice>, reqwest::Error> {
-    let mut ajou =
-        "https://www.ajou.ac.kr/kr/ajou/notice.do?mode=list&article.offset=0&articleLimit="
-            .to_string();
+pub fn notice_parse(
+    query_option: &str,
+    _nums: Option<usize>,
+) -> Result<Vec<Notice>, reqwest::Error> {
+    // let query = "?mode=list&article.offset=0&articleLimit=";
 
-    let nums_int = _nums.unwrap_or(5);
-    let nums_str = nums_int.to_string();
+    // query = ?mode=list&srSearchKey=&srSearchVal=키워드&article.offset=0&articleLimit=
 
-    ajou.push_str(&nums_str);
+    let string;
+    let query = match query_option {
+        "ajou" => "?mode=list&article.offset=0&articleLimit=",
+        _ => {
+            string = format!(
+                "?mode=list&srSearchKey=&srSearchVal={}&article.offset=0&articleLimit=",
+                query_option
+            ); // format! has dropped so gotta save it to temp var
+            &string
+        }
+    };
+
+    let nums_int = _nums.unwrap_or(7);
+    // ajou.push_str(&nums_str);
+
+    let url = [AJOU_LINK, query, &nums_int.to_string()].concat();
 
     let client = reqwest::blocking::Client::builder()
         .danger_accept_invalid_certs(true)
         .build()?;
 
     // header 없이 보내면 404
-    let res = client.get(ajou).header(USER_AGENT, "User-Agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.114 Safari/537.36").send().unwrap();
-    let body = res.text().unwrap();
+    let res = client.get(url).header(USER_AGENT, MY_USER_AGENT).send()?;
+    let body = res.text()?;
 
     // println!("Body:\n{}", body);
 
@@ -46,7 +65,8 @@ pub fn notice_parse(_nums: Option<usize>) -> Result<Vec<Notice>, reqwest::Error>
     let dates = Selector::parse("span.b-date").unwrap();
     let writers = Selector::parse("span.b-writer").unwrap();
 
-    let mut notices = vec![Notice::default(); nums_int];
+    // let mut notices = vec![Notice::default(); nums_int];
+    let mut notices: Vec<Notice> = vec![];
 
     let mut id_elements = document.select(&ids);
     let mut title_elements = document.select(&titles);
@@ -54,8 +74,12 @@ pub fn notice_parse(_nums: Option<usize>) -> Result<Vec<Notice>, reqwest::Error>
     let mut writer_elements = document.select(&writers);
 
     // struct Notice
-    for index in 0..nums_int {
-        let id_element = id_elements.next().unwrap();
+    while let Some(id_element) = id_elements.next() {
+        // let id_element = match id_elements.next() {
+        //     Some(item) => item,
+        //     None => break,
+        // }; // cant get id_elements length...
+
         let id = id_element.text().collect::<Vec<_>>()[0]
             .trim() // " 12345 "
             .parse::<i32>()
@@ -76,8 +100,10 @@ pub fn notice_parse(_nums: Option<usize>) -> Result<Vec<Notice>, reqwest::Error>
 
         let mut title = inner_a.value().attr("title").unwrap().to_string();
         let link = AJOU_LINK.to_string() + inner_a.value().attr("href").unwrap();
+
         // Check duplication. title: [writer] blah -> title: [blah]
         let dup = "[".to_string() + &writer + "]";
+
         if title.contains(&dup) {
             title = title.replace(&dup, "");
             // title.replace_range(0..dup.len(), "");
@@ -98,11 +124,21 @@ pub fn notice_parse(_nums: Option<usize>) -> Result<Vec<Notice>, reqwest::Error>
 
         // title.retain(|c| !r#"~「」"#.contains(c));
 
-        notices[index].id = id;
-        notices[index].title = title;
-        notices[index].link = link;
-        notices[index].date = date;
-        notices[index].writer = writer;
+        let notice = Notice {
+            id,
+            title,
+            link,
+            date,
+            writer,
+        };
+
+        notices.push(notice);
+
+        // (*notice).id = id;
+        // (*notice).title = title;
+        // (*notice).link = link;
+        // (*notice).date = date;
+        // (*notice).writer = writer;
     }
     // println!("{:?}", notices);
     Ok(notices)
@@ -111,7 +147,7 @@ pub fn notice_parse(_nums: Option<usize>) -> Result<Vec<Notice>, reqwest::Error>
 fn bench_parse_notice(b: &mut Bencher) {
     b.iter(|| {
         for _ in 0..10 {
-            notice_parse(Some(30)).unwrap();
+            notice_parse("ajou", Some(100)).unwrap();
         }
     });
 }
@@ -120,5 +156,13 @@ fn criterion_benchmark(c: &mut Criterion) {
     c.bench_function("parse_notice", bench_parse_notice);
 }
 
-criterion_group!(benches, criterion_benchmark);
 criterion_main!(benches);
+
+criterion_group! {
+    name = benches;
+    config = Criterion::default()
+        .with_profiler(
+            PProfProfiler::new(100, Output::Flamegraph(None))
+        );
+    targets = criterion_benchmark
+}
