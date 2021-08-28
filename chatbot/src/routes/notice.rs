@@ -14,7 +14,7 @@ use chrono::prelude::Local;
 use chrono::Duration;
 use lazy_static::lazy_static;
 use serde_json::Value;
-use unicode_segmentation::UnicodeSegmentation;
+// use unicode_segmentation::UnicodeSegmentation;
 
 use std::collections::HashMap;
 
@@ -44,23 +44,34 @@ pub async fn get_last_notice() -> impl Responder {
     result.add_qr(QuickReply::new("오늘", "오늘 공지 보여줘"));
     result.add_qr(QuickReply::new("어제", "어제 공지 보여줘"));
 
-    let notice = notice_parse("ajou", Some(1)).await.unwrap();
-    let mut notice = notice.first().unwrap().to_owned();
+    let notice = match notice_parse("ajou", Some(1)).await {
+        Ok(yes) => yes,
+        _ => {
+            result.add_output(SimpleText::new("홈페이지 반응이 늦습니다. :(").build());
+
+            return HttpResponse::Ok()
+                .content_type("application/json")
+                .body(serde_json::to_string(&result).unwrap());
+        }
+    };
+
+    let notice = notice.first().unwrap().to_owned();
 
     let mut list_card = ListCard::new(format!("{} 공지", notice.date));
     list_card.add_button(Button::Share(ShareButton::new("공유하기")));
 
-    if notice.title.graphemes(true).count() > 35 {
-        notice.title = UnicodeSegmentation::grapheme_indices(notice.title.as_str(), true)
-            .enumerate()
-            .filter(|&(i, _)| i < 32)
-            .map(|(_, (_, s))| s)
-            .collect::<Vec<&str>>()
-            .join("")
-            + "...";
-    }
+    // if notice.title.graphemes(true).count() > 35 {
+    //     notice.title = UnicodeSegmentation::grapheme_indices(notice.title.as_str(), true)
+    //         .enumerate()
+    //         .filter(|&(i, _)| i < 32)
+    //         .map(|(_, (_, s))| s)
+    //         .collect::<Vec<&str>>()
+    //         .join("")
+    //         + "...";
+    // }
     let description = format!(
-        "{} {}",
+        "[{}] {} {}",
+        notice.category,
         notice.writer,
         notice.date[notice.date.len() - 5..].to_string()
     );
@@ -85,7 +96,16 @@ pub async fn get_today_notice(_: web::Json<Value>) -> impl Responder {
     result.add_qr(QuickReply::new("오늘", "오늘 공지 보여줘"));
     result.add_qr(QuickReply::new("어제", "어제 공지 보여줘"));
 
-    let mut notices = notice_parse("ajou", Some(30)).await.unwrap();
+    let mut notices = match notice_parse("ajou", Some(30)).await {
+        Ok(yes) => yes,
+        _ => {
+            result.add_output(SimpleText::new("홈페이지 반응이 늦습니다. :(").build());
+
+            return HttpResponse::Ok()
+                .content_type("application/json")
+                .body(serde_json::to_string(&result).unwrap());
+        }
+    };
     let today = Local::now().format("%y.%m.%d").to_string(); // "21.07.20"
 
     let mut list_card = ListCard::new(format!("{}) 오늘 공지", today));
@@ -130,7 +150,8 @@ pub async fn get_today_notice(_: web::Json<Value>) -> impl Responder {
             //         + "...";
             // }
             let description = format!(
-                "{} {}",
+                "[{}] {} {}",
+                notice.category,
                 notice.writer,
                 notice.date[notice.date.len() - 5..].to_string()
             );
@@ -250,7 +271,8 @@ pub async fn get_yesterday_notice(conn: web::Data<DbPool>) -> impl Responder {
             //         + "...";
             // }
             let description = format!(
-                "{} {}",
+                "[{}] {} {}",
+                notice.category,
                 notice.writer,
                 notice.date[notice.date.len() - 5..].to_string()
             );
@@ -289,7 +311,18 @@ pub async fn get_keyword_notice(kakao: web::Json<Value>) -> impl Responder {
 
     result.add_qr(QuickReply::new("검색", "검색"));
 
-    let mut notices = notice_parse(keyword, Some(7)).await.unwrap();
+    let mut notices = match notice_parse(keyword, Some(7)).await {
+        Ok(yes) => yes,
+        _ => {
+            result.add_output(SimpleText::new("홈페이지 반응이 늦습니다. :(").build());
+
+            return HttpResponse::Ok()
+                .content_type("application/json")
+                .body(serde_json::to_string(&result).unwrap());
+        }
+    };
+
+    // let mut notices = notice_parse(keyword, Some(7)).await.unwrap();
     if notices.is_empty() {
         result.add_output(SimpleText::new(format!("{}에 관한 글이 없어요.", keyword)).build());
 
@@ -326,7 +359,8 @@ pub async fn get_keyword_notice(kakao: web::Json<Value>) -> impl Responder {
         //         + "...";
         // }  // 원래는 안되었는데 카카오 챗봇이 알아서 짜르는 느낌?
         let description = format!(
-            "{} {}",
+            "[{}] {} {}",
+            notice.category,
             notice.writer,
             notice.date[notice.date.len() - 5..].to_string()
         );
@@ -345,24 +379,28 @@ pub async fn get_keyword_notice(kakao: web::Json<Value>) -> impl Responder {
 #[post("/notice/ask")]
 pub async fn get_category() -> impl Responder {
     // println!("{:#?}", kakao);
-    let mut result = Template::new();
-    result.add_qr(QuickReply::new("학사", "학사"));
-    result.add_qr(QuickReply::new("학사일정", "학사일정"));
-    result.add_qr(QuickReply::new("비교과", "비교과"));
-    result.add_qr(QuickReply::new("장학", "장학"));
-    result.add_qr(QuickReply::new("취업", "취업줘"));
-    result.add_qr(QuickReply::new("사무", "사무"));
-    result.add_qr(QuickReply::new("행사", "행사"));
-    result.add_qr(QuickReply::new("파란학기제", "파란학기제"));
-    result.add_qr(QuickReply::new("학술", "학술"));
-    result.add_qr(QuickReply::new("입학", "입학"));
-    result.add_qr(QuickReply::new("기타", "기타"));
+    // let mut result = Template::new();
+    // result.add_qr(QuickReply::new("학사", "학사"));
+    // result.add_qr(QuickReply::new("학사일정", "학사일정"));
+    // result.add_qr(QuickReply::new("비교과", "비교과"));
+    // result.add_qr(QuickReply::new("장학", "장학"));
+    // result.add_qr(QuickReply::new("취업", "취업줘"));
+    // result.add_qr(QuickReply::new("사무", "사무"));
+    // result.add_qr(QuickReply::new("행사", "행사"));
+    // result.add_qr(QuickReply::new("파란학기제", "파란학기제"));
+    // result.add_qr(QuickReply::new("학술", "학술"));
+    // result.add_qr(QuickReply::new("입학", "입학"));
+    // result.add_qr(QuickReply::new("기타", "기타"));
 
-    result.add_output(SimpleText::new("무슨 공지를 보고 싶으신가요?").build());
+    // result.add_output(SimpleText::new("무슨 공지를 보고 싶으신가요?").build());
+
+    // HttpResponse::Ok()
+    //     .content_type("application/json")
+    //     .body(serde_json::to_string(&result).unwrap())
 
     HttpResponse::Ok()
         .content_type("application/json")
-        .body(serde_json::to_string(&result).unwrap())
+        .body(r#"{"template":{"outputs":[{"simpleText":{"text":"무슨 공지를 보고 싶으신가요?"}}],"quickReplies":[{"action":"message","label":"학사","messageText":"학사"},{"action":"message","label":"학사일정","messageText":"학사일정"},{"action":"message","label":"비교과","messageText":"비교과"},{"action":"message","label":"장학","messageText":"장학"},{"action":"message","label":"취업","messageText":"취업줘"},{"action":"message","label":"사무","messageText":"사무"},{"action":"message","label":"행사","messageText":"행사"},{"action":"message","label":"파란학기제","messageText":"파란학기제"},{"action":"message","label":"학술","messageText":"학술"},{"action":"message","label":"입학","messageText":"입학"},{"action":"message","label":"기타","messageText":"기타"}]},"version":"2.0"}"#)
 }
 
 #[post("/notice/category")]
@@ -403,15 +441,16 @@ pub async fn get_category_notice(kakao: web::Json<Value>) -> impl Responder {
 
     result.add_qr(QuickReply::new("카테", "ㅋㅌ"));
 
-    let mut notices = notice_parse("ajou", Some(5)).await.unwrap();
-    if notices.is_empty() {
-        result
-            .add_output(SimpleText::new("서버 반응이 늦습니다, 잠시 후 다시 시도하세요.").build());
+    let mut notices = match notice_parse("ajou", Some(5)).await {
+        Ok(yes) => yes,
+        _ => {
+            result.add_output(SimpleText::new("홈페이지 반응이 늦습니다. :(").build());
 
-        return HttpResponse::Ok()
-            .content_type("application/json")
-            .body(serde_json::to_string(&result).unwrap());
-    }
+            return HttpResponse::Ok()
+                .content_type("application/json")
+                .body(serde_json::to_string(&result).unwrap());
+        }
+    };
 
     let mut list_card = ListCard::new(format!("{} 공지", keyword));
     list_card.add_button(Button::Share(ShareButton::new("공유하기")));

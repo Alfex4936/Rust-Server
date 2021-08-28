@@ -10,6 +10,7 @@ use serde_json::Value;
 #[table_name = "ajou_notices"]
 pub struct Notice {
     pub id: i32,
+    pub category: String,
     pub title: String,
     pub date: String,
     pub link: String,

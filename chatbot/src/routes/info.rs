@@ -72,7 +72,18 @@ pub async fn get_schedule(conn: web::Data<DbPool>) -> impl Responder {
 #[post("/info/library")]
 pub async fn get_library() -> impl Responder {
     let mut result = Template::new();
-    let library = library_parse().await.unwrap();
+    let library = match library_parse().await {
+        Ok(yes) => yes,
+        _ => {
+            result.add_qr(QuickReply::new("도서관 좌석", "ㄷ"));
+            result.add_output(SimpleText::new("홈페이지 반응이 늦습니다. :(").build());
+
+            return HttpResponse::Ok()
+                .content_type("application/json")
+                .body(serde_json::to_string(&result).unwrap());
+        }
+    };
+
     let mut description = vec![];
     for data in &library.data.list {
         description.push(format!(
@@ -107,7 +118,19 @@ pub async fn get_people(kakao: web::Json<Value>) -> impl Responder {
     let mut result = Template::new();
     let mut carousel = Carousel::new();
 
-    let mut people = people_parse(&keyword).await.unwrap();
+    let mut people = match people_parse(&keyword).await {
+        Ok(yes) => yes,
+        _ => {
+            result.add_qr(QuickReply::new("인물 검색", "인물"));
+            result.add_output(SimpleText::new("홈페이지 반응이 늦습니다. :(").build());
+
+            return HttpResponse::Ok()
+                .content_type("application/json")
+                .body(serde_json::to_string(&result).unwrap());
+        }
+    };
+
+    result.add_qr(QuickReply::new("어제", "어제 공지 보여줘"));
     if people.phone_number.is_empty() {
         result.add_output(SimpleText::new(format!("{} 검색 결과가 없습니다.", keyword)).build());
         return HttpResponse::Ok()

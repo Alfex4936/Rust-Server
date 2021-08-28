@@ -3,6 +3,7 @@ use crate::MY_USER_AGENT;
 use reqwest::header::USER_AGENT;
 use scraper::{Html, Selector};
 use std::collections::HashMap;
+use std::time::Duration;
 
 pub const AJOU_LINK: &str = "https://www.ajou.ac.kr/kr/ajou/notice.do";
 pub const NAVER_WEATHER: &str = "https://weather.naver.com/today/02117530?cpName=ACCUWEATHER"; // 아주대 지역 날씨
@@ -37,6 +38,7 @@ pub async fn notice_parse(
 
     let client = reqwest::Client::builder()
         .danger_accept_invalid_certs(true)
+        .connect_timeout(Duration::from_secs(2))
         .build()?;
 
     // header 없이 보내면 404
@@ -55,6 +57,7 @@ pub async fn notice_parse(
 
     // Notice has id, title, date, link, writer
     let ids = Selector::parse("td.b-num-box").unwrap();
+    let cates = Selector::parse("span.b-cate").unwrap(); // 카테고리
     let titles = Selector::parse("div.b-title-box").unwrap(); // includes links
     let dates = Selector::parse("span.b-date").unwrap();
     let writers = Selector::parse("span.b-writer").unwrap();
@@ -63,6 +66,7 @@ pub async fn notice_parse(
     let mut notices: Vec<Notice> = vec![];
 
     let mut id_elements = document.select(&ids);
+    let mut cate_elements = document.select(&cates);
     let mut title_elements = document.select(&titles);
     let mut date_elements = document.select(&dates);
     let mut writer_elements = document.select(&writers);
@@ -88,6 +92,11 @@ pub async fn notice_parse(
         let writer = writer_element.text().collect::<Vec<_>>()[0]
             .trim()
             .to_string(); // "가나다라마"
+
+        let cate_element = cate_elements.next().unwrap();
+        let category = cate_element.text().collect::<Vec<_>>()[0]
+            .trim()
+            .to_string(); // " 학사 "
 
         let title_element = title_elements.next().unwrap();
         let inner_a = title_element.select(&a_selector).next().unwrap();
@@ -120,6 +129,7 @@ pub async fn notice_parse(
 
         let notice = Notice {
             id,
+            category,
             title,
             link,
             date,
@@ -135,12 +145,15 @@ pub async fn notice_parse(
         // (*notice).writer = writer;
     }
     // println!("{:?}", notices);
+
+    // notices.reverse();
     Ok(notices)
 }
 
 pub async fn weather_parse() -> Result<Weather, reqwest::Error> {
     let client = reqwest::Client::builder()
         .danger_accept_invalid_certs(true)
+        .connect_timeout(Duration::from_secs(2))
         .build()?;
 
     let res = client.get(NAVER_WEATHER).header(USER_AGENT, "User-Agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.114 Safari/537.36").send().await?;
@@ -238,6 +251,7 @@ pub async fn weather_parse() -> Result<Weather, reqwest::Error> {
 pub async fn library_parse() -> Result<Library, reqwest::Error> {
     let client = reqwest::Client::builder()
         .danger_accept_invalid_certs(true)
+        .connect_timeout(Duration::from_secs(2))
         .build()?;
 
     // header 없이 보내면 404
@@ -257,12 +271,12 @@ pub async fn library_parse() -> Result<Library, reqwest::Error> {
 pub async fn people_parse(keyword: &str) -> Result<People, reqwest::Error> {
     let client = reqwest::Client::builder()
         .danger_accept_invalid_certs(true)
+        .connect_timeout(Duration::from_secs(2))
         .build()?;
 
     let mut map = HashMap::new();
     map.insert("keyword", keyword);
 
-    // header 없이 보내면 404
     let res = client
         .post(AJOU_PEOPLE)
         .header(USER_AGENT, MY_USER_AGENT)
