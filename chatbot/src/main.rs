@@ -38,6 +38,7 @@ async fn main() -> std::io::Result<()> {
             .service(rustserver::info::get_schedule)
             .service(rustserver::info::get_library)
             .service(rustserver::info::get_people)
+            .service(rustserver::info::get_map)
     })
     .bind(rustserver::SERVER)?
     .run()

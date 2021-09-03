@@ -174,3 +174,21 @@ pub async fn get_people(kakao: web::Json<Value>) -> impl Responder {
         .content_type("application/json")
         .body(serde_json::to_string(&result).unwrap())
 }
+
+#[post("/info/map")]
+pub async fn get_map() -> impl Responder {
+    let mut result = Template::new();
+    result.add_output(SimpleText::new("아주대 지도 (Map)").build());
+
+    result.add_output(
+        SimpleImage::new(
+            "https://raw.githubusercontent.com/Alfex4936/Rust-Server/main/imgs/map.jpg",
+            "https://www.ajou.ac.kr/en/intro/way01.do",
+        )
+        .build(),
+    );
+
+    HttpResponse::Ok()
+        .content_type("application/json")
+        .body(serde_json::to_string(&result).unwrap())
+}
