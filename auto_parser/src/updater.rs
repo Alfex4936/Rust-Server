@@ -81,7 +81,7 @@ pub async fn notice_parse(
     let mut writer_elements = document.select(&writers);
 
     // struct Notice
-    while let Some(id_element) = id_elements.next() {
+    for id_element in &mut id_elements {
         let id = id_element.text().collect::<Vec<_>>()[0]
             .trim() // " 12345 "
             .parse::<i32>()
@@ -224,15 +224,12 @@ async fn main() -> Result<(), reqwest::Error> {
                 .unwrap();
 
             match db_notice.try_next().await {
-                Ok(n) => {
-                    if let Some(_) = n {
-                        continue;
-                    } // duplicated
-                }
-                _ => continue 'main,
+                Ok(Some(_)) => continue, // duplicated
+                Ok(None) => notice_collection.insert_one(notice, None).await.unwrap(),
+                Err(_) => continue 'main,
             };
 
-            notice_collection.insert_one(notice, None).await.unwrap();
+            // notice_collection.insert_one(notice, None).await.unwrap();
         }
         println!("Updated!, resting 30mins...");
 
