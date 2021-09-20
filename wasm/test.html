@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WASM</title>
+  </head>
+  <body>
+    <script type="module">
+      import init, { add, hello_world } from "./pkg/rust_wasm.js";
+      init().then(() => {
+        let output = add(1, 1);
+        console.log(console.log(`The result is : ${output}`));
+        hello_world();
+      });
+    </script>
+  </body>
+</html>
