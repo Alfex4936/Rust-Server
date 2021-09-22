@@ -72,7 +72,7 @@ pub async fn notice_parse(
     let mut writer_elements = document.select(&writers);
 
     // struct Notice
-    while let Some(id_element) = id_elements.next() {
+    for id_element in &mut id_elements {
         let id = id_element.text().collect::<Vec<_>>()[0]
             .trim() // " 12345 "
             .parse::<i32>()
@@ -84,9 +84,12 @@ pub async fn notice_parse(
             .to_string(); // "2021-07-15"
 
         let writer_element = writer_elements.next().unwrap();
-        let writer = writer_element.text().collect::<Vec<_>>()[0]
-            .trim()
-            .to_string(); // "가나다라마"
+        let writer = writer_element.text().collect::<Vec<_>>();
+        let writer = if writer.is_empty() {
+            "알 수 없음".to_string()
+        } else {
+            writer[0].trim().to_string() // "가나다라마"
+        };
 
         let cate_element = cate_elements.next().unwrap();
         let category = cate_element.text().collect::<Vec<_>>()[0]
