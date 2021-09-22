@@ -73,11 +73,6 @@ pub async fn notice_parse(
 
     // struct Notice
     while let Some(id_element) = id_elements.next() {
-        // let id_element = match id_elements.next() {
-        //     Some(item) => item,
-        //     None => break,
-        // }; // cant get id_elements length...
-
         let id = id_element.text().collect::<Vec<_>>()[0]
             .trim() // " 12345 "
             .parse::<i32>()

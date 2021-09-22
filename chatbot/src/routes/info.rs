@@ -130,7 +130,7 @@ pub async fn get_people(kakao: web::Json<Value>) -> impl Responder {
         }
     };
 
-    result.add_qr(QuickReply::new("어제", "어제 공지 보여줘"));
+    // result.add_qr(QuickReply::new("인물", "인물"));
     if people.phone_number.is_empty() {
         result.add_output(SimpleText::new(format!("{} 검색 결과가 없습니다.", keyword)).build());
         return HttpResponse::Ok()
