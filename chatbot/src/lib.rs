@@ -1,6 +1,5 @@
 #![feature(proc_macro_hygiene, decl_macro)]
 
-
 extern crate actix_http;
 extern crate actix_rt;
 extern crate actix_web;
@@ -21,7 +20,10 @@ mod db;
 mod routes;
 mod utils;
 
-pub use db::connection;
+#[cfg(feature = "mongo")]
+pub use db::connection_mongo;
+#[cfg(not(feature = "mongo"))]
+pub use db::connection_mysql;
 pub use routes::info;
 pub use routes::notice;
 pub use routes::route;

@@ -1,7 +1,7 @@
 #![allow(proc_macro_derive_resolution_fallback)]
-use crate::db::connection::DbPool;
-
+// use crate::db::connection::DbPool;
 use crate::db::query;
+use crate::routes::DbPool;
 use crate::utils::parser::{library_parse, people_parse, weather_parse, NAVER_WEATHER};
 use crate::CARD_IMAGES;
 
