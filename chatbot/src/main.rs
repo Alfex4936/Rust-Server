@@ -13,14 +13,18 @@ static GLOBAL: Jemalloc = Jemalloc;
 async fn main() -> std::io::Result<()> {
     // std::env::set_var("RUST_LOG", "info,actix_web=info");
 
+    #[cfg(not(feature = "mongodb"))]
+    let data = web::Data::new(rustserver::connection_mysql::init_pool());
+    #[cfg(feature = "mongodb")]
+    let data = web::Data::new(rustserver::connection_mongo::init_mongo().await.unwrap());
+
     // start http server
-    HttpServer::new(|| {
+    HttpServer::new(move || {
         let cors = Cors::permissive();
         // let store = MemoryStore::new();
         // .allowed_origin("*")
         // .allowed_methods(vec!["GET", "POST"])
         // .max_age(3600);
-
         App::new()
             .wrap(cors)
             // Limitation: 70 Requests / Second
@@ -29,7 +33,7 @@ async fn main() -> std::io::Result<()> {
             //         .with_interval(Duration::from_secs(60))
             //         .with_max_requests(70),
             // )
-            .app_data(web::Data::new(rustserver::connection::init_pool())) // <- store db pool in app state
+            .app_data(data.clone()) // <- store db pool in app state
             .wrap(middleware::Logger::default())
             // .service(rustserver::test::hello)
             // .service(rustserver::test::db_test)
