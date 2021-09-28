@@ -48,7 +48,12 @@ pub async fn get_schedule(conn: web::Data<DbPool>) -> impl Responder {
 
     let mut rng = rand::thread_rng();
 
-    for sched in query::show_scheds(&conn.get().unwrap()).await.unwrap() {
+    #[cfg(not(feature = "mongo"))]
+    let db = &conn.get().unwrap();
+    #[cfg(feature = "mongo")]
+    let db = &conn;
+
+    for sched in query::show_scheds(db).await.unwrap() {
         // println!("id: {}, content: {}", sched.id, sched.content);
 
         let basic_card = BasicCard::new()
