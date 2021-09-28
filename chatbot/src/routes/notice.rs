@@ -240,7 +240,12 @@ pub async fn get_yesterday_notice(conn: web::Data<DbPool>) -> impl Responder {
     let date = Local::now() - Duration::days(1);
     let yesterday = date.format("%y.%m.%d").to_string();
 
-    let mut notices = query::get_notices_by_date(&conn.get().unwrap(), yesterday.to_owned())
+    #[cfg(not(feature = "mongo"))]
+    let db = &conn.get().unwrap();
+    #[cfg(feature = "mongo")]
+    let db = &conn;
+
+    let mut notices = query::get_notices_by_date(db, yesterday.to_owned())
         .await
         .unwrap();
 

@@ -13,10 +13,10 @@ static GLOBAL: Jemalloc = Jemalloc;
 async fn main() -> std::io::Result<()> {
     // std::env::set_var("RUST_LOG", "info,actix_web=info");
 
-    #[cfg(not(feature = "mongodb"))]
+    #[cfg(not(feature = "mongo"))]
     let data = web::Data::new(rustserver::connection_mysql::init_pool());
-    #[cfg(feature = "mongodb")]
-    let data = web::Data::new(rustserver::connection_mongo::init_mongo().await.unwrap());
+    #[cfg(feature = "mongo")]
+    let data = web::Data::new(rustserver::connection_mongo::init_mongo().await);
 
     // start http server
     HttpServer::new(move || {
