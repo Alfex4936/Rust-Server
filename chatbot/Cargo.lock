@@ -1588,9 +1588,9 @@ dependencies = [
 
 [[package]]
 name = "kakao-rs"
-version = "0.2.8"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "18327e70cb8abc02ba54e587ed522df4e09d467d8a952af51e58f3e50b668f66"
+checksum = "822e1c12c2541bd4451cf507d95b8aafbc3ad66b65c0546b18e676394070201b"
 dependencies = [
  "serde",
  "serde_derive",
