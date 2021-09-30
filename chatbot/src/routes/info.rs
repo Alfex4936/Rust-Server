@@ -5,9 +5,7 @@ use crate::routes::DbPool;
 use crate::utils::parser::{library_parse, people_parse, weather_parse, NAVER_WEATHER};
 use crate::CARD_IMAGES;
 
-use kakao_rs::components::basics::*;
-use kakao_rs::components::buttons::*;
-use kakao_rs::components::cards::*;
+use kakao_rs::prelude::*;
 
 use actix_web::{post, web, HttpResponse, Responder};
 use rand::Rng;
@@ -30,9 +28,11 @@ pub async fn get_weather() -> impl Responder {
         .set_title("[수원 영통구 기준]")
         .set_desc(description)
         .set_thumbnail(weather.icon)
-        .add_button(Button::Link(
-            LinkButton::new("자세히").set_link(NAVER_WEATHER),
-        ));
+        .add_button(
+            Button::new(ButtonType::Link)
+                .set_label("자세히")
+                .set_link(NAVER_WEATHER),
+        );
 
     result.add_output(basic_card.build());
 
@@ -100,9 +100,11 @@ pub async fn get_library() -> impl Responder {
     let basic_card = BasicCard::new()
         .set_title("[중앙도서관]")
         .set_desc(description.join("\n"))
-        .add_button(Button::Link(
-            LinkButton::new("중앙도서관 홈페이지").set_link("https://library.ajou.ac.kr/#/"),
-        ));
+        .add_button(
+            Button::new(ButtonType::Link)
+                .set_label("중앙도서관 홈페이지")
+                .set_link("https://library.ajou.ac.kr/#/"),
+        );
 
     result.add_output(SimpleText::new("현재 중앙 도서관 좌석 현황입니다!").build());
     result.add_output(basic_card.build());
@@ -161,14 +163,17 @@ pub async fn get_people(kakao: web::Json<Value>) -> impl Responder {
             // .add_button(Button::Call(CallButton::new("전화").set_number(
             //     INTEL.to_string() + &person.tel_no.as_ref().unwrap_or(&"X".to_string()),
             // )))
-            .add_button(Button::init_call_button(
-                "전화",
+            .add_button(Button::new(ButtonType::Call).set_label("전화").set_number(
                 &(INTEL.to_string() + person.tel_no.as_ref().unwrap_or(&"X".to_string())),
             ))
-            .add_button(Button::Link(LinkButton::new("이메일").set_link(format!(
-                "mailto:{}?subject=안녕하세요",
-                person.email.as_ref().unwrap_or(&"X".to_string())
-            ))));
+            .add_button(
+                Button::new(ButtonType::Link)
+                    .set_label("이메일")
+                    .set_link(format!(
+                        "mailto:{}?subject=안녕하세요",
+                        person.email.as_ref().unwrap_or(&"X".to_string())
+                    )),
+            );
 
         carousel.add_card(basic_card.build_card());
     }

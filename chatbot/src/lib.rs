@@ -14,6 +14,7 @@ extern crate serde_derive;
 extern crate serde_json;
 
 extern crate chrono;
+#[cfg(feature = "mongo")]
 extern crate mongodb;
 extern crate rand;
 
