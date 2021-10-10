@@ -1,4 +1,4 @@
-use ajou_notice::{AJOU_LINK, MY_USER_AGENT};
+use ajou_notice::{Notice, AJOU_LINK, MY_USER_AGENT};
 use chrono::{DateTime, Datelike, TimeZone, Timelike, Utc, Weekday};
 use chrono_tz::Asia::Seoul;
 use chrono_tz::Tz;
@@ -9,16 +9,6 @@ use reqwest::header::USER_AGENT;
 use scraper::{Html, Selector};
 use serde::{Deserialize, Serialize};
 use tokio::time::{sleep, Duration};
-
-#[derive(Serialize, Deserialize, Debug, Default, Clone)]
-pub struct Notice {
-    pub id: i32,
-    pub category: String,
-    pub title: String,
-    pub date: String,
-    pub link: String,
-    pub writer: String,
-}
 
 pub async fn notice_parse(
     query_option: &str,
@@ -82,10 +72,14 @@ pub async fn notice_parse(
 
     // struct Notice
     for id_element in &mut id_elements {
-        let id = id_element.text().collect::<Vec<_>>()[0]
+        let id = match id_element.text().collect::<Vec<_>>()[0]
             .trim() // " 12345 "
             .parse::<i32>()
-            .unwrap();
+        {
+            Ok(some) => some,
+            Err(_) => continue, // 번호가 "공지"
+        };
+        // .unwrap();
 
         let date_element = date_elements.next().unwrap();
         let date = date_element.text().collect::<Vec<_>>()[0]
@@ -162,6 +156,7 @@ async fn main() -> Result<(), reqwest::Error> {
     let notice_collection = client.database("ajou").collection::<Notice>("notice");
 
     println!("Connected!");
+
     'main: loop {
         // db connection check?
         let seoul_now: DateTime<Tz> = Utc::now().with_timezone(&Seoul);
