@@ -32,7 +32,9 @@ lazy_static! {
         m.insert("기타", 8);
         m.insert("행사", 166);
         m.insert("파란학기제", 167);
+        m.insert("파란 학기제", 167);
         m.insert("파란학기", 167);
+        m.insert("파란 학기", 167);
         m.insert("학사일정", 168);
         m.insert("학사 일정", 168);
         m
@@ -97,7 +99,7 @@ pub async fn get_today_notice(_: web::Json<Value>) -> impl Responder {
     result.add_qr(QuickReply::new("오늘", "오늘 공지 보여줘"));
     result.add_qr(QuickReply::new("어제", "어제 공지 보여줘"));
 
-    let mut notices = match notice_parse("ajou", Some(30)).await {
+    let mut notices: Vec<Notice> = match notice_parse("ajou", Some(30)).await {
         Ok(yes) => yes,
         _ => {
             result.add_output(SimpleText::new("홈페이지 반응이 늦습니다. :(").build());
@@ -431,6 +433,7 @@ pub async fn get_category_notice(kakao: web::Json<Value>) -> impl Responder {
 
     let keyword = match kakao_keyword.get("cate") {
         Some(v) => v.as_str().unwrap(),
+        // retain whitespace
         _ => {
             result.add_qr(QuickReply::new("카테", "ㅋㅌ"));
             result.add_output(SimpleText::new("오류가 발생했습니다 :(").build());
