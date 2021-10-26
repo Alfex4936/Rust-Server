@@ -465,16 +465,17 @@ pub async fn get_category_notice(kakao: web::Json<Value>) -> impl Responder {
 
     result.add_qr(QuickReply::new("카테", "ㅋㅌ"));
 
-    let mut notices = match notice_parse("ajou", Some(5)).await {
-        Ok(yes) => yes,
-        _ => {
-            result.add_output(SimpleText::new("홈페이지 반응이 늦습니다. :(").build());
+    let mut notices =
+        match notice_parse("category", Some(*CATEGORIES.get(keyword).unwrap() as usize)).await {
+            Ok(yes) => yes,
+            _ => {
+                result.add_output(SimpleText::new("홈페이지 반응이 늦습니다. :(").build());
 
-            return HttpResponse::Ok()
-                .content_type("application/json")
-                .body(serde_json::to_string(&result).unwrap());
-        }
-    };
+                return HttpResponse::Ok()
+                    .content_type("application/json")
+                    .body(serde_json::to_string(&result).unwrap());
+            }
+        };
 
     let mut list_card = ListCard::new(format!("{} 공지", keyword));
     list_card.add_button(Button::new(ButtonType::Share).set_label("공유하기"));
