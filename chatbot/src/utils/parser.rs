@@ -22,6 +22,7 @@ pub async fn notice_parse(
     let string;
     let query = match query_option {
         "ajou" => "?mode=list&article.offset=0&articleLimit=",
+        "category" => "?mode=list&articleLimit=5&srCategoryId=",
         _ => {
             string = format!(
                 "?mode=list&srSearchKey=&srSearchVal={}&article.offset=0&articleLimit=",
@@ -31,7 +32,7 @@ pub async fn notice_parse(
         }
     };
 
-    let nums_int = _nums.unwrap_or(7);
+    let nums_int = _nums.unwrap_or(5);
     // ajou.push_str(&nums_str);
 
     let url = [AJOU_LINK, query, &nums_int.to_string()].concat();
@@ -73,10 +74,14 @@ pub async fn notice_parse(
 
     // struct Notice
     for id_element in &mut id_elements {
-        let id = id_element.text().collect::<Vec<_>>()[0]
+        let id = match id_element.text().collect::<Vec<_>>()[0]
             .trim() // " 12345 "
             .parse::<i32>()
-            .unwrap();
+        {
+            Ok(some) => some,
+            Err(_) => continue, // 번호가 "공지"
+        };
+        // .unwrap();
 
         let date_element = date_elements.next().unwrap();
         let date = date_element.text().collect::<Vec<_>>()[0]
