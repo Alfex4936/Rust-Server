@@ -11,7 +11,7 @@ harness = false
 [dependencies]
 actix-rt = "2"
 actix-http = "2"
-actix-web = "4.0.0-beta.9" 
+actix-web = "4.0.0-beta.10" 
 actix-cors = "0.6.0-beta.2"
 # handlebars = { version = "4.1.0", features = ["dir_source"] }
 # tera = "1.12"
@@ -36,6 +36,7 @@ jemallocator = "0.3"
 
 [dev-dependencies]
 criterion = "0.3"
+[target.'cfg(not(target_env = "msvc"))'.dev.dependencies]
 pprof = { version = "0.5", features = ["flamegraph", "criterion"] }
 
 [profile.dev]
