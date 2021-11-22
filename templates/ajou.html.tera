@@ -141,7 +141,9 @@
                   <h5>
                     <b>{{ notice.title }}</b>
                   </h5>
-                  {{ notice.writer }} ({{ notice.date }}) |
+                  [{{ notice.category }}] {{ notice.writer }} ({{
+                    notice.date
+                  }}) |
                   <a href="{{ notice.link }}" target="_blank" rel="noopener"
                     >열기</a
                   >

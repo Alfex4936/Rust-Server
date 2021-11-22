@@ -10,6 +10,7 @@ diesel::table! {
 diesel::table! {
     ajou_notices (id) {
         id -> Integer,
+        category -> Varchar,
         title -> Varchar,
         date -> Varchar,
         link -> Varchar,

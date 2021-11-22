@@ -34,25 +34,29 @@ pub fn notice_parse(_nums: Option<usize>) -> Result<Vec<Notice>, reqwest::Error>
 
     // Notice has id, title, date, link, writer
     let ids = Selector::parse("td.b-num-box").unwrap();
+    let cates = Selector::parse("span.b-cate").unwrap(); // 카테고리
     let titles = Selector::parse("div.b-title-box").unwrap(); // includes links
     let dates = Selector::parse("span.b-date").unwrap();
     let writers = Selector::parse("span.b-writer").unwrap();
 
-    // let mut notices: [Notice; 10] = arr![Notice::default(); 10];
-    let mut notices = vec![Notice::default(); nums_int];
+    let mut notices: Vec<Notice> = vec![];
 
     let mut id_elements = document.select(&ids);
+    let mut cate_elements = document.select(&cates);
     let mut title_elements = document.select(&titles);
     let mut date_elements = document.select(&dates);
     let mut writer_elements = document.select(&writers);
 
     // struct Notice
-    for index in 0..nums_int {
-        let id_element = id_elements.next().unwrap();
-        let id = id_element.text().collect::<Vec<_>>()[0]
+    for id_element in &mut id_elements {
+        let id = match id_element.text().collect::<Vec<_>>()[0]
             .trim() // " 12345 "
             .parse::<i32>()
-            .unwrap();
+        {
+            Ok(some) => some,
+            Err(_) => continue, // 번호가 "공지"
+        };
+        // .unwrap();
 
         let date_element = date_elements.next().unwrap();
         let date = date_element.text().collect::<Vec<_>>()[0]
@@ -60,17 +64,27 @@ pub fn notice_parse(_nums: Option<usize>) -> Result<Vec<Notice>, reqwest::Error>
             .to_string(); // "2021-07-15"
 
         let writer_element = writer_elements.next().unwrap();
-        let writer = writer_element.text().collect::<Vec<_>>()[0]
+        let writer = writer_element.text().collect::<Vec<_>>();
+        let writer = if writer.is_empty() {
+            "알 수 없음".to_string()
+        } else {
+            writer[0].trim().to_string() // "가나다라마"
+        };
+
+        let cate_element = cate_elements.next().unwrap();
+        let category = cate_element.text().collect::<Vec<_>>()[0]
             .trim()
-            .to_string(); // "가나다라마"
+            .to_string(); // " 학사 "
 
         let title_element = title_elements.next().unwrap();
         let inner_a = title_element.select(&a_selector).next().unwrap();
 
         let mut title = inner_a.value().attr("title").unwrap().to_string();
         let link = AJOU_LINK.to_string() + inner_a.value().attr("href").unwrap();
+
         // Check duplication. title: [writer] blah -> title: [blah]
         let dup = "[".to_string() + &writer + "]";
+
         if title.contains(&dup) {
             title = title.replace(&dup, "");
             // title.replace_range(0..dup.len(), "");
@@ -91,13 +105,26 @@ pub fn notice_parse(_nums: Option<usize>) -> Result<Vec<Notice>, reqwest::Error>
 
         // title.retain(|c| !r#"~「」"#.contains(c));
 
-        notices[index].id = id;
-        notices[index].title = title;
-        notices[index].link = link;
-        notices[index].date = date;
-        notices[index].writer = writer;
+        let notice = Notice {
+            id,
+            category,
+            title,
+            link,
+            date,
+            writer,
+        };
+
+        notices.push(notice);
+
+        // (*notice).id = id;
+        // (*notice).title = title;
+        // (*notice).link = link;
+        // (*notice).date = date;
+        // (*notice).writer = writer;
     }
     // println!("{:?}", notices);
+
+    // notices.reverse();
     Ok(notices)
 }
 
