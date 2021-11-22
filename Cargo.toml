@@ -6,18 +6,18 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rocket = "0.4.10"
+rocket = "0.4"
 rocket_contrib = { version = "0.4", features = ["handlebars_templates", "tera_templates"]}
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serde_derive = "1.0"
 reqwest = { version = "0.11", features = ["json", "blocking"] }
 tokio = { version = "1", features = ["full"] }
-diesel = { version = "1.4.7", features = ["mysql"] }
-dotenv = "0.15.0"
+diesel = { version = "1.4", features = ["mysql"] }
+dotenv = "0.15"
 r2d2 = "*"
 r2d2-diesel = "*"
-scraper = "0.12.0"
+scraper = "0.12"
 chrono = "0.4"
 unicode-segmentation = "1.8.0"
 
