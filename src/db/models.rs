@@ -8,6 +8,7 @@ use crate::db::schema::ajou_sched;
 #[table_name = "ajou_notices"]
 pub struct Notice {
     pub id: i32,
+    pub category: String,
     pub title: String,
     pub date: String,
     pub link: String,
@@ -18,6 +19,7 @@ impl Default for Notice {
     fn default() -> Notice {
         Notice {
             id: 0,
+            category: "".to_string(),
             title: "".to_string(),
             date: "".to_string(),
             link: "".to_string(),
