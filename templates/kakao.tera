@@ -21,7 +21,7 @@
           <span class="message__author">챗봇</span>
           <div class="message__info">
             <span class="message__bubble">어서오세요.</br></br>사용 가능한 명령어:</br><i>set server http://localhost:8000/v1</i></br><i>set endpoint /json</i></span>
-            <button type="button" styles="cursor: default;">Hello</button>
+            {# <button type="button" styles="cursor: default;">Hello</button> #}
             <span id="-1" class="message__time">{{ time }}</span>
           </div>
         </div>
