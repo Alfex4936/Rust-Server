@@ -37,7 +37,7 @@ pub struct Weather {
     pub rain_night: String,
     pub fine_dust: String,
     pub ultra_dust: String,
-    pub uv: String,
+    pub sunset: String,
     pub icon: String,
 }
 

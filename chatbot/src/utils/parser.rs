@@ -210,9 +210,9 @@ pub async fn weather_parse() -> Result<Weather, reqwest::Error> {
     let ultra_dust = stats_element.next().unwrap().text().collect::<Vec<_>>()[0]
         .trim()
         .to_string(); // "나쁨"
-    let uv = stats_element.next().unwrap().text().collect::<Vec<_>>()[0]
+    let sunset = stats_element.next().unwrap().text().collect::<Vec<_>>()[0]
         .trim()
-        .to_string(); // "높음"
+        .to_string(); // "17:15"
 
     let day_rain = rains_element.next().unwrap().text().collect::<Vec<_>>()[1]
         .trim()
@@ -237,7 +237,7 @@ pub async fn weather_parse() -> Result<Weather, reqwest::Error> {
     weather.rain_night = night_rain;
     weather.fine_dust = fine_dust;
     weather.ultra_dust = ultra_dust;
-    weather.uv = uv;
+    weather.sunset = sunset;
 
     if icon_classes.contains("night") {
         icon += "_night";
