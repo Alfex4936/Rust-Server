@@ -158,7 +158,7 @@ async fn main() -> Result<(), reqwest::Error> {
     println!("Connected!");
 
     'main: loop {
-        // db connection check?
+        // TODO db connection check?
         let seoul_now: DateTime<Tz> = Utc::now().with_timezone(&Seoul);
         // println!("Seoul: {}", seoul_now);
         match seoul_now.weekday() {

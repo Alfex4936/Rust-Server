@@ -14,8 +14,8 @@ path = "src/updater.rs"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-tokio = { version = "1.11.0", features = ["full"] }
-mongodb = "2.0.0-beta.3"
+tokio = { version = "1", features = ["full"] }
+mongodb = "2.0"
 reqwest = { version = "0.11", features = ["json"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
@@ -23,7 +23,7 @@ serde_derive = "1.0"
 scraper = "0.12.0"
 futures = "0.3"
 chrono = "0.4"
-chrono-tz = "0.5"
+chrono-tz = "0.6"
 
 [profile.dev]
 opt-level = 0
