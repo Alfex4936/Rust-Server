@@ -11,8 +11,8 @@ harness = false
 [dependencies]
 actix-rt = "2"
 actix-http = "2"
-actix-web = "4.0.0-beta.18" 
-actix-cors = "0.6.0-beta.2"
+actix-web = "4" 
+actix-cors = "0.6.1"
 # handlebars = { version = "4.1.0", features = ["dir_source"] }
 # tera = "1.12"
 serde = { version = "1.0", features = ["derive"] }
@@ -29,7 +29,7 @@ kakao-rs = "0.3"
 rand = "0.8"
 lazy_static = "1.4.0"
 # actix-ratelimit = "0.3.1"
-mongodb = "2.0.0"
+mongodb = "2"
 futures = "0.3"
 [target.'cfg(not(target_env = "msvc"))'.dependencies]
 jemallocator = "0.3"
@@ -37,7 +37,7 @@ jemallocator = "0.3"
 [dev-dependencies]
 criterion = "0.3"
 [target.'cfg(not(target_env = "msvc"))'.dev.dependencies]
-pprof = { version = "0.5", features = ["flamegraph", "criterion"] }
+pprof = { version = "0.6", features = ["flamegraph", "criterion"] }
 
 [profile.dev]
 opt-level = 1
