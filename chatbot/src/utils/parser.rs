@@ -79,7 +79,13 @@ pub async fn notice_parse(
             .parse::<i32>()
         {
             Ok(some) => some,
-            Err(_) => continue, // 번호가 "공지"
+            Err(_) => {
+                date_elements.next().unwrap();
+                writer_elements.next().unwrap();
+                cate_elements.next().unwrap();
+                title_elements.next().unwrap();
+                continue; // 번호가 "공지"
+            }
         };
         // .unwrap();
 
@@ -177,6 +183,8 @@ pub async fn weather_parse() -> Result<Weather, reqwest::Error> {
     let stats = Selector::parse("em.level_text").unwrap();
     let icon = Selector::parse("div.today_weather > i").unwrap();
     let wind_chill = Selector::parse("div.weather_area > dl > dd:nth-child(6)").unwrap();
+
+    let stats = Selector::parse("div.weather_quick_inner > i").unwrap();
 
     let current_temp_element = document.select(&current_temp).next().unwrap();
     let current_stat_element = document.select(&current_stat).next().unwrap();

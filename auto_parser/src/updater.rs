@@ -77,7 +77,13 @@ pub async fn notice_parse(
             .parse::<i32>()
         {
             Ok(some) => some,
-            Err(_) => continue, // 번호가 "공지"
+            Err(_) => {
+                date_elements.next().unwrap();
+                writer_elements.next().unwrap();
+                cate_elements.next().unwrap();
+                title_elements.next().unwrap();
+                continue; // 번호가 "공지"
+            }
         };
         // .unwrap();
 
@@ -133,8 +139,10 @@ pub async fn notice_parse(
             date,
             writer,
         };
-
+        
+        // println!("{:?}", notice);
         notices.push(notice);
+
 
         // (*notice).id = id;
         // (*notice).title = title;
