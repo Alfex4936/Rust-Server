@@ -1,4 +1,4 @@
-use ajou_notice::{AJOU_LINK, MY_USER_AGENT};
+use ajou_notice::{Notice, AJOU_LINK, MY_USER_AGENT};
 use futures::stream::TryStreamExt;
 use mongodb::bson::{doc, Document};
 use mongodb::{options::ClientOptions, options::FindOptions, Client};
@@ -6,16 +6,6 @@ use reqwest::header::USER_AGENT;
 use scraper::{Html, Selector};
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
-
-#[derive(Serialize, Deserialize, Debug, Default, Clone)]
-pub struct Notice {
-    pub id: i32,
-    pub category: String,
-    pub title: String,
-    pub date: String,
-    pub link: String,
-    pub writer: String,
-}
 
 pub async fn notice_parse(
     query_option: &str,
