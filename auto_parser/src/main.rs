@@ -128,14 +128,7 @@ pub async fn notice_parse(
         };
 
         notices.push(notice);
-
-        // (*notice).id = id;
-        // (*notice).title = title;
-        // (*notice).link = link;
-        // (*notice).date = date;
-        // (*notice).writer = writer;
     }
-    // println!("{:?}", notices);
 
     notices.reverse();
     Ok(notices)
