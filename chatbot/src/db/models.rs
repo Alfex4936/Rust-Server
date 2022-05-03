@@ -32,12 +32,13 @@ pub struct Weather {
     pub min_temp: String,
     pub current_temp: String,
     pub current_status: String,
-    pub wind_chill: String, // 체감온도
+    // pub wind_chill: String, // 체감온도
     pub rain_day: String,
     pub rain_night: String,
     pub fine_dust: String,
     pub ultra_dust: String,
     pub sunset: String,
+    pub uv: String,
     pub icon: String,
 }
 

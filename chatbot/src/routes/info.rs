@@ -16,11 +16,11 @@ const INTEL: &str = "031-219-";
 #[post("/info/weather")]
 pub async fn get_weather() -> impl Responder {
     let weather = weather_parse().await.unwrap();
-    let description = format!("현재 날씨는 {}, {} (체감 {})\n최저기온 {}, 최고기온은 {}\n\n낮, 밤 강수 확률은 {}, {}\n미세먼지 농도는 {}\n일몰은 {}",
-        weather.current_status, weather.current_temp, weather.wind_chill,
+    let description = format!("현재 날씨는 {}, {}\n최저기온 {}, 최고기온은 {}\n\n낮, 밤 강수 확률은 {}, {}\n미세먼지 농도는 {}\n자외선은 {}, 일몰은 {}",
+        weather.current_status, weather.current_temp,
         weather.min_temp, weather.max_temp,
         weather.rain_day, weather.rain_night,
-        weather.fine_dust, weather.sunset);
+        weather.fine_dust, weather.uv, weather.sunset);
 
     let mut result = Template::new();
 

@@ -10,7 +10,7 @@ harness = false
 
 [dependencies]
 actix-rt = "2"
-actix-http = "2"
+actix-http = "3"
 actix-web = "4" 
 actix-cors = "0.6.1"
 # handlebars = { version = "4.1.0", features = ["dir_source"] }
@@ -22,7 +22,7 @@ reqwest = { version = "0.11", features = ["json", "blocking"] }
 dotenv = "0.15.0"
 r2d2 = "0.8"
 diesel = { version = "1.4", features = ["mysql", "r2d2"] }
-scraper = "0.12.0"
+scraper = "0.13"
 chrono = "0.4"
 # unicode-segmentation = "1.8.0"
 kakao-rs = "0.3"
@@ -37,10 +37,10 @@ jemallocator = "0.3"
 [dev-dependencies]
 criterion = "0.3"
 [target.'cfg(not(target_env = "msvc"))'.dev.dependencies]
-pprof = { version = "0.6", features = ["flamegraph", "criterion"] }
+pprof = { version = "0.8", features = ["flamegraph", "criterion"] }
 
 [profile.dev]
-opt-level = 1
+opt-level = 0
 debug = true
 
 [profile.release]
