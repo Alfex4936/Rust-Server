@@ -34,13 +34,11 @@
 </div>
 
 ## 사용
-AWS EC2 + S3 + RDS
+AWS EC2 + RDS
 ```console
 ubuntu:~$ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
-ubuntu:~$ aws s3 sync s3://bucket/kakao_server kakao_server
-
-ubuntu:~$ cd kakao_server && cargo run --release
+ubuntu:~$ cd kakao_server && cargo run --release --features mongo
 ```
 
 ## 기능
@@ -62,7 +60,7 @@ ubuntu:~$ cd kakao_server && cargo run --release
 
 *Carousel*: items(10)
 
-## 카카오 챗봇 JSON 라이브러리
+## [카카오 챗봇 JSON 라이브러리](https://github.com/Alfex4936/kakao-rs)
 ```toml
 [dependencies]
 kakao-rs = "0.3"

@@ -160,9 +160,6 @@ pub async fn get_people(kakao: web::Json<Value>) -> impl Responder {
                 INTEL.to_string() + person.tel_no.as_ref().unwrap_or(&"X".to_string()),
                 person.dept_nm.as_ref().unwrap_or(&"X".to_string())
             ))
-            // .add_button(Button::Call(CallButton::new("전화").set_number(
-            //     INTEL.to_string() + &person.tel_no.as_ref().unwrap_or(&"X".to_string()),
-            // )))
             .add_button(Button::new(ButtonType::Call).set_label("전화").set_number(
                 &(INTEL.to_string() + person.tel_no.as_ref().unwrap_or(&"X".to_string())),
             ))

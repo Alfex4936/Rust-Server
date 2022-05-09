@@ -1,16 +1,24 @@
 #![allow(proc_macro_derive_resolution_fallback)]
 
+#[cfg(feature = "mongo")]
 use crate::routes::DbPool;
+#[cfg(not(feature = "mongo"))]
 use diesel;
+#[cfg(not(feature = "mongo"))]
 use diesel::prelude::*;
+#[cfg(feature = "mongo")]
 use futures::stream::TryStreamExt;
+#[cfg(feature = "mongo")]
 use mongodb::{bson::doc, options::FindOptions};
 
 use crate::db::models::Notice;
 use crate::db::models::Schedule;
 
+#[cfg(not(feature = "mongo"))]
 use crate::db::schema::ajou_notices;
+#[cfg(not(feature = "mongo"))]
 use crate::db::schema::ajou_notices::dsl::*;
+#[cfg(not(feature = "mongo"))]
 use crate::db::schema::ajou_sched::dsl::*;
 
 #[cfg(not(feature = "mongo"))]

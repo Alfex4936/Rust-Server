@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use std::time::Duration;
 
 pub const AJOU_LINK: &str = "https://www.ajou.ac.kr/kr/ajou/notice.do";
-pub const NAVER_WEATHER: &str = "https://search.naver.com/search.naver?sm=tab_hty.top&where=nexearch&query=%EB%82%A0%EC%94%A8+%EB%A7%A4%ED%83%843%EB%8F%99&oquery=%EB%82%A0%EC%94%A8"; // 아주대 지역 날씨
+pub const NAVER_WEATHER: &str = "https://m.search.naver.com/search.naver?sm=tab_hty.top&where=nexearch&query=%EB%82%A0%EC%94%A8+%EB%A7%A4%ED%83%843%EB%8F%99&oquery=%EB%82%A0%EC%94%A8"; // 아주대 지역 날씨
 pub const NAVER_WEATHER_ICON: &str = "https://weather.naver.com/today/02117530?cpName=ACCUWEATHER"; // 아주대 지역 날씨는
 pub const AJOU_LIBRARY: &str = env!("AJOU_LIBRARY"); // 아주대 중앙 도서관
 pub const AJOU_PEOPLE: &str = env!("AJOU_PEOPLE"); // 아주대 인물 검색
@@ -147,12 +147,6 @@ pub async fn notice_parse(
         };
 
         notices.push(notice);
-
-        // (*notice).id = id;
-        // (*notice).title = title;
-        // (*notice).link = link;
-        // (*notice).date = date;
-        // (*notice).writer = writer;
     }
     // println!("{:?}", notices);
 
@@ -165,7 +159,7 @@ pub async fn weather_parse() -> Result<Weather, reqwest::Error> {
         .danger_accept_invalid_certs(true)
         .timeout(Duration::from_secs(5))
         .connect_timeout(Duration::from_secs(2))
-        .user_agent("User-Agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.114 Safari/537.36")
+        .user_agent(MY_USER_AGENT)
         .build()?;
 
     let res = client.get(NAVER_WEATHER).send().await?;
@@ -177,8 +171,6 @@ pub async fn weather_parse() -> Result<Weather, reqwest::Error> {
     // println!("Body:\n{}", body);
 
     // HTML Parse
-    let mut weather: Weather = Default::default();
-
     let document = Html::parse_document(&body);
     let document2 = Html::parse_document(&body2);
 
@@ -211,14 +203,14 @@ pub async fn weather_parse() -> Result<Weather, reqwest::Error> {
     let current_status_element = document.select(&current_status).next().unwrap();
     let current_status = current_status_element.text().collect::<Vec<_>>()[0]
         .trim()
-        .to_string();  // 맑음
+        .to_string(); // 맑음
 
     // 일몰
     let sunset = Selector::parse("li.item_today.type_sun > a > span").unwrap();
     let sunset_element = document.select(&sunset).next().unwrap();
     let sunset = sunset_element.text().collect::<Vec<_>>()[0]
         .trim()
-        .to_string();  // 19:22
+        .to_string(); // 19:22
 
     // 오전/오후 강수확률
     let rain_drops = Selector::parse("span.rainfall").unwrap();
@@ -226,10 +218,10 @@ pub async fn weather_parse() -> Result<Weather, reqwest::Error> {
 
     let rain_day = rain_elements.next().unwrap().text().collect::<Vec<_>>()[0]
         .trim()
-        .to_string();  // 13%
+        .to_string(); // 13%
     let rain_night = rain_elements.next().unwrap().text().collect::<Vec<_>>()[0]
         .trim()
-        .to_string();  // 0%
+        .to_string(); // 0%
 
     // 미세/초미세
     let four_stats_selector = Selector::parse("span.txt").unwrap();
@@ -237,15 +229,15 @@ pub async fn weather_parse() -> Result<Weather, reqwest::Error> {
 
     let fine_dust = four_elements.next().unwrap().text().collect::<Vec<_>>()[0]
         .trim()
-        .to_string();  // 나쁨
+        .to_string(); // 나쁨
     let ultra_dust = four_elements.next().unwrap().text().collect::<Vec<_>>()[0]
         .trim()
-        .to_string();  // 좋음
+        .to_string(); // 좋음
 
     // 자외선
     let uv = four_elements.next().unwrap().text().collect::<Vec<_>>()[0]
         .trim()
-        .to_string();  // 매우높음
+        .to_string(); // 매우높음
 
     // 날씨 아이콘
     let icon = Selector::parse("div.summary_img > i").unwrap();
@@ -257,6 +249,7 @@ pub async fn weather_parse() -> Result<Weather, reqwest::Error> {
     }
 
     // struct Weather init
+    let mut weather: Weather = Default::default();
     weather.current_temp = current_temp;
     weather.min_temp = min_temp;
     weather.max_temp = max_temp;
@@ -267,6 +260,7 @@ pub async fn weather_parse() -> Result<Weather, reqwest::Error> {
     weather.fine_dust = fine_dust;
     weather.ultra_dust = ultra_dust;
     weather.uv = uv;
+    // weather.windchill = windchill;  // 체감온도 추가됨 (2022.05.04)
     weather.icon = format!(
         "https://raw.githubusercontent.com/Alfex4936/KakaoChatBot-Golang/main/imgs/{}.png?raw=true",
         icon
@@ -350,20 +344,3 @@ pub async fn people_parse(keyword: &str) -> Result<People, reqwest::Error> {
 
 //     Ok(meal)
 // }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[actix_rt::test]
-    async fn weather_test() {
-        let weather = weather_parse().await.unwrap();
-        println!("{:#?}", weather);
-    }
-
-    #[actix_rt::test]
-    async fn library_test() {
-        let library = library_parse().await.unwrap();
-        println!("{:#?}", library);
-    }
-}
