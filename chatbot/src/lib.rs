@@ -20,7 +20,7 @@ extern crate rand;
 
 mod db;
 mod routes;
-mod utils;
+pub mod utils;
 
 #[cfg(feature = "mongo")]
 pub use db::connection_mongo;
