@@ -1,5 +1,6 @@
 #![allow(proc_macro_derive_resolution_fallback)]
 #![allow(dead_code)]
+
 use crate::db::schema::ajou_notices;
 use crate::db::schema::ajou_sched;
 // use diesel::prelude::*;
