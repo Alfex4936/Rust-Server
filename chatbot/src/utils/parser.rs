@@ -188,7 +188,7 @@ pub async fn weather_parse() -> Result<Weather, reqwest::Error> {
     let min_temp = min_temp_element.text().collect::<Vec<_>>()[1]
         .trim()
         .to_string();
-    let min_temp = min_temp.replace("°", "") + "도";
+    let min_temp = min_temp.replace('°', "") + "도";
 
     // 최고 온도
     let max_temp = Selector::parse("span.highest").unwrap();
@@ -196,7 +196,7 @@ pub async fn weather_parse() -> Result<Weather, reqwest::Error> {
     let max_temp = max_temp_element.text().collect::<Vec<_>>()[1]
         .trim()
         .to_string();
-    let max_temp = max_temp.replace("°", "") + "도";
+    let max_temp = max_temp.replace('°', "") + "도";
 
     // 현재 날씨
     let current_status = Selector::parse("span.weather.before_slash").unwrap();

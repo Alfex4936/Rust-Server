@@ -355,12 +355,11 @@ pub async fn get_keyword_notice(kakao: web::Json<Value>) -> impl Responder {
 
     // if keyword.to_string().graphemes(true).count() > 12 {}
 
-    let label;
-    if notices.len() > 5 {
-        label = "더보기";
+    let label = if notices.len() > 5 {
+        "더보기"
     } else {
-        label = "홈페이지 열기";
-    }
+        "홈페이지 열기"
+    };
 
     list_card.add_button(
         Button::new(ButtonType::Link)

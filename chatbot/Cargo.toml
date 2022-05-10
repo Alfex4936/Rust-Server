@@ -55,5 +55,6 @@ incremental = false
 overflow-checks = false
 
 [features]
+default = ["mongo"]
 mysql = []
 mongo = []
