@@ -1,4 +1,4 @@
-use crate::db::models::{Library, Notice, People, Weather};
+use crate::db::models::{Library, Meal, Notice, People, Weather};
 use crate::MY_USER_AGENT;
 use reqwest::header::USER_AGENT;
 use scraper::{Html, Selector};
@@ -10,7 +10,8 @@ pub const NAVER_WEATHER: &str = "https://m.search.naver.com/search.naver?sm=tab_
 pub const NAVER_WEATHER_ICON: &str = "https://weather.naver.com/today/02117530?cpName=ACCUWEATHER"; // 아주대 지역 날씨는
 pub const AJOU_LIBRARY: &str = env!("AJOU_LIBRARY"); // 아주대 중앙 도서관
 pub const AJOU_PEOPLE: &str = env!("AJOU_PEOPLE"); // 아주대 인물 검색
-                                                   // pub const AJOU_MEAL: &str = env!("AJOU_MEAL"); // 아주대 학식
+pub const AJOU_MEAL: &str = env!("AJOU_MEAL"); // 아주대 인물 검색
+                                               // pub const AJOU_MEAL: &str = env!("AJOU_MEAL"); // 아주대 학식
 
 pub async fn notice_parse(
     query_option: &str,
@@ -249,22 +250,35 @@ pub async fn weather_parse() -> Result<Weather, reqwest::Error> {
     }
 
     // struct Weather init
-    let mut weather: Weather = Default::default();
-    weather.current_temp = current_temp;
-    weather.min_temp = min_temp;
-    weather.max_temp = max_temp;
-    weather.current_status = current_status;
-    weather.sunset = sunset;
-    weather.rain_day = rain_day;
-    weather.rain_night = rain_night;
-    weather.fine_dust = fine_dust;
-    weather.ultra_dust = ultra_dust;
-    weather.uv = uv;
-    // weather.windchill = windchill;  // 체감온도 추가됨 (2022.05.04)
-    weather.icon = format!(
-        "https://raw.githubusercontent.com/Alfex4936/KakaoChatBot-Golang/main/imgs/{}.png?raw=true",
-        icon
-    );
+    let weather = Weather {
+        current_temp,
+        min_temp,
+        max_temp,
+        current_status,
+        sunset,
+        rain_day,
+        rain_night,
+        fine_dust,
+        ultra_dust,
+        uv,
+        icon,
+    };
+    // let mut weather: Weather = Default::default();
+    // weather.current_temp = current_temp;
+    // weather.min_temp = min_temp;
+    // weather.max_temp = max_temp;
+    // weather.current_status = current_status;
+    // weather.sunset = sunset;
+    // weather.rain_day = rain_day;
+    // weather.rain_night = rain_night;
+    // weather.fine_dust = fine_dust;
+    // weather.ultra_dust = ultra_dust;
+    // weather.uv = uv;
+    // // weather.windchill = windchill;  // 체감온도 추가됨 (2022.05.04)
+    // weather.icon = format!(
+    //     "https://raw.githubusercontent.com/Alfex4936/KakaoChatBot-Golang/main/imgs/{}.png?raw=true",
+    //     icon
+    // );
 
     println!("{:?}", weather);
     Ok(weather)
@@ -313,34 +327,54 @@ pub async fn people_parse(keyword: &str) -> Result<People, reqwest::Error> {
     Ok(people)
 }
 
-// pub async fn meal_parse() -> Result<Meal, reqwest::Error> {
-//     let client = reqwest::Client::builder()
-//         .danger_accept_invalid_certs(true)
-//         .build()?;
+pub async fn meal_parse(date: String) -> Result<Meal, reqwest::Error> {
+    let client = reqwest::Client::builder()
+        .danger_accept_invalid_certs(true)
+        .connect_timeout(Duration::from_secs(2))
+        .build()?;
 
-//     // header 없이 보내면 404
-//     let res = client.get(AJOU_MEAL).header(USER_AGENT, "User-Agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.114 Safari/537.36").send().await?;
-//     let body = res.text().await?;
+    let mut map = HashMap::new();
 
-//     // println!("Body:\n{}", body);
+    map.insert("categoryId", "221"); // 221: 교직원, 교직원밖에 정보 없음
+    map.insert("yyyymmdd", &date);
 
-//     let mut meal: Meal = serde_json::from_str(&body).unwrap();
+    // header 없이 보내면 404
+    let res = client
+        .post(AJOU_MEAL)
+        .header(USER_AGENT, MY_USER_AGENT)
+        .json(&map)
+        .send()
+        .await?;
 
-//     if meal.data.is_empty() {
-//         meal.msg_code = "empty".to_string();
-//     } else {
-//         meal.data.breakfast = meal
-//             .data
-//             .breakfast
-//             .chars()
-//             .map(|x| match x {
-//                 '!' => '?',
-//                 'A'..='Z' => 'X',
-//                 'a'..='z' => 'x',
-//                 _ => x,
-//             })
-//             .collect();
-//     }
+    let body = res.text().await?;
 
-//     Ok(meal)
-// }
+    println!("Body:\n{}", body);
+
+    let mut meal: Meal = serde_json::from_str(&body).unwrap();
+
+    if meal.data.breakfast.is_none() && meal.data.lunch.is_none() && meal.data.dinner.is_none() {
+        meal.msg_code = "empty".to_string();
+    }
+
+    if let Some(ref mut meal) = meal.data.breakfast {
+        if meal.is_empty() {
+            *meal = "없음".to_string();
+        }
+    }
+    if let Some(ref mut meal) = meal.data.lunch {
+        if meal.is_empty() {
+            *meal = "없음".to_string();
+        } else {
+            *meal = str::replace(meal, "<br>", "\n");
+        }
+    }
+    if let Some(ref mut meal) = meal.data.dinner {
+        if meal.is_empty() {
+            *meal = "없음".to_string();
+        } else {
+            *meal = str::replace(meal, "<br>", "\n");
+        }
+    }
+
+    Ok(meal)
+}

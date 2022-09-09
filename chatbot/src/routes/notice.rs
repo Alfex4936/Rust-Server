@@ -76,7 +76,7 @@ pub async fn get_last_notice() -> impl Responder {
         "[{}] {} {}",
         notice.category,
         notice.writer,
-        notice.date[notice.date.len() - 5..].to_string()
+        &notice.date[notice.date.len() - 5..]
     );
 
     list_card.add_item(
@@ -115,10 +115,12 @@ pub async fn get_today_notice(_: web::Json<Value>) -> impl Responder {
 
     // notices.iter().position(|&n| n.date.ne(&today)).unwrap();
 
-    notices = notices
-        .into_iter()
-        .filter(|notice| notice.date.eq(&today))
-        .collect();
+    notices.retain(|notice| notice.date.eq(&today));
+
+    // notices = notices
+    //     .into_iter()
+    //     .filter(|notice| notice.date.eq(&today))
+    //     .collect();
 
     // let length = notices.len();
 
@@ -162,7 +164,7 @@ pub async fn get_today_notice(_: web::Json<Value>) -> impl Responder {
                 "[{}] {} {}",
                 notice.category,
                 notice.writer,
-                notice.date[notice.date.len() - 5..].to_string()
+                &notice.date[notice.date.len() - 5..]
             );
 
             list_card.add_item(
@@ -193,10 +195,12 @@ pub async fn get_more_today_notice(_: web::Json<Value>) -> impl Responder {
 
     // notices.iter().position(|&n| n.date.ne(&today)).unwrap();
 
-    notices = notices
-        .into_iter()
-        .filter(|notice| notice.date.eq(&today))
-        .collect();
+    notices.retain(|notice| notice.date.eq(&today));
+
+    // notices = notices
+    //     .into_iter()
+    //     .filter(|notice| notice.date.eq(&today))
+    //     .collect();
 
     // let length = notices.len();
 
@@ -293,7 +297,7 @@ pub async fn get_yesterday_notice(conn: web::Data<DbPool>) -> impl Responder {
                 "[{}] {} {}",
                 notice.category,
                 notice.writer,
-                notice.date[notice.date.len() - 5..].to_string()
+                &notice.date[notice.date.len() - 5..]
             );
 
             list_card.add_item(
@@ -384,7 +388,7 @@ pub async fn get_keyword_notice(kakao: web::Json<Value>) -> impl Responder {
             "[{}] {} {}",
             notice.category,
             notice.writer,
-            notice.date[notice.date.len() - 5..].to_string()
+            &notice.date[notice.date.len() - 5..]
         );
         list_card.add_item(
             ListItem::new((*notice.title).to_string())
@@ -502,7 +506,7 @@ pub async fn get_category_notice(kakao: web::Json<Value>) -> impl Responder {
         let description = format!(
             "{} {}",
             notice.writer,
-            notice.date[notice.date.len() - 5..].to_string()
+            &notice.date[notice.date.len() - 5..]
         );
         list_card.add_item(
             ListItem::new((*notice.title).to_string())

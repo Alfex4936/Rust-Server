@@ -8,7 +8,7 @@ use crate::db::schema::ajou_sched;
 use serde_json::Value;
 
 #[derive(Queryable, AsChangeset, Serialize, Deserialize, Debug, Default, Clone)]
-#[table_name = "ajou_notices"]
+#[diesel(table_name = ajou_notices)]
 pub struct Notice {
     pub id: i32,
     pub category: String,
@@ -19,9 +19,9 @@ pub struct Notice {
 }
 
 #[derive(Queryable, AsChangeset, Serialize, Deserialize)]
-#[table_name = "ajou_sched"]
+#[diesel(table_name = ajou_sched)]
 pub struct Schedule {
-    pub id: i32,
+    // pub id: i32,
     pub start_date: String,
     pub end_date: String,
     pub content: String,
@@ -43,27 +43,33 @@ pub struct Weather {
     pub icon: String,
 }
 
-// #[derive(Debug, Deserialize)]
-// #[serde(rename_all = "camelCase")]
-// pub struct Meal {
-//     pub msg_code: String,
-//     #[serde(rename = "p018Text")]
-//     pub data: MealContent,
-// }
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Meal {
+    pub msg_code: String,
+    #[serde(rename = "p018Text")]
+    pub data: MealContent,
+}
 
-// #[derive(Debug, Deserialize)]
-// #[serde(rename_all = "camelCase")]
-// /// 63 기숙사, 220 학생, 221 교직원
-// pub struct MealContent {
-//     pub breakfast: String, //아침
-//     pub lunch: String,     // 점심
-//     pub dinner: String,    // 저녁
-//     pub snack_bar: String, // 분식
-//     #[serde(rename = "menuDt")]
-//     pub date: String, // 날짜
-//     #[serde(rename = "restaurantNm")]
-//     pub name: String, // 식당 이름 (교직원식당(생활관 2층))
-// }
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+/// 63 기숙사, 220 학생, 221 교직원
+pub struct MealContent {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub breakfast: Option<String>, //아침
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub lunch: Option<String>, // 점심
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dinner: Option<String>, // 저녁
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub snack_bar: Option<String>, // 분식
+    #[serde(rename = "menuDt")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub date: Option<String>, // 날짜
+    #[serde(rename = "restaurantNm")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>, // 식당 이름 (교직원식당(생활관 2층))
+}
 
 #[derive(Debug, Deserialize)]
 pub struct Library {

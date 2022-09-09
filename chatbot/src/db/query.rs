@@ -9,7 +9,7 @@ use diesel::prelude::*;
 #[cfg(feature = "mongo")]
 use futures::stream::TryStreamExt;
 #[cfg(feature = "mongo")]
-use mongodb::{bson::doc, options::FindOptions};
+use mongodb::bson::doc;
 
 use crate::db::models::Notice;
 use crate::db::models::Schedule;

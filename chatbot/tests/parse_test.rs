@@ -1,6 +1,8 @@
 extern crate rustserver;
 
-use rustserver::utils::parser::{library_parse, notice_parse, people_parse, weather_parse};
+use rustserver::utils::parser::{
+    library_parse, meal_parse, notice_parse, people_parse, weather_parse,
+};
 
 #[cfg(test)]
 mod tests {
@@ -34,5 +36,11 @@ mod tests {
     async fn weather_test() {
         let weather = weather_parse().await.unwrap();
         println!("{:#?}", weather);
+    }
+
+    #[actix_rt::test]
+    async fn meal_test() {
+        let meal = meal_parse("20220908".to_string()).await.unwrap();
+        println!("{:#?}", meal);
     }
 }
