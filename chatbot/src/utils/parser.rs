@@ -334,7 +334,6 @@ pub async fn meal_parse(date: String) -> Result<Meal, reqwest::Error> {
         .build()?;
 
     let mut map = HashMap::new();
-
     map.insert("categoryId", "221"); // 221: 교직원, 교직원밖에 정보 없음
     map.insert("yyyymmdd", &date);
 
@@ -348,7 +347,7 @@ pub async fn meal_parse(date: String) -> Result<Meal, reqwest::Error> {
 
     let body = res.text().await?;
 
-    println!("Body:\n{}", body);
+    // println!("Body:\n{}", body);
 
     let mut meal: Meal = serde_json::from_str(&body).unwrap();
 

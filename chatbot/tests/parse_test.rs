@@ -1,5 +1,7 @@
 extern crate rustserver;
 
+use chrono::prelude::Local;
+
 use rustserver::utils::parser::{
     library_parse, meal_parse, notice_parse, people_parse, weather_parse,
 };
@@ -40,7 +42,17 @@ mod tests {
 
     #[actix_rt::test]
     async fn meal_test() {
+        let today = Local::now().format("%Y%m%d").to_string(); // "20220910"
+        println!("{today}");
+
         let meal = meal_parse("20220908".to_string()).await.unwrap();
         println!("{:#?}", meal);
+
+        let text = format!(
+            "점심: {}\n\n저녁: {}",
+            meal.data.lunch.unwrap_or("없음".to_string()),
+            meal.data.dinner.unwrap_or("없음".to_string())
+        );
+        println!("{text}");
     }
 }
