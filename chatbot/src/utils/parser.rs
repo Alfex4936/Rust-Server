@@ -249,6 +249,11 @@ pub async fn weather_parse() -> Result<Weather, reqwest::Error> {
         icon += "_night";
     }
 
+    icon = format!(
+        "https://raw.githubusercontent.com/Alfex4936/KakaoChatBot-Golang/main/imgs/{}.png?raw=true",
+        icon
+    );
+
     // struct Weather init
     let weather = Weather {
         current_temp,
@@ -280,7 +285,7 @@ pub async fn weather_parse() -> Result<Weather, reqwest::Error> {
     //     icon
     // );
 
-    println!("{:?}", weather);
+    // println!("{:?}", weather);
     Ok(weather)
 }
 
