@@ -1,30 +1,51 @@
 use crate::db::models::{Notice, Weather};
-use crate::kakao_json::basics::Types;
+use crate::MY_USER_AGENT;
 use reqwest::header::USER_AGENT;
 use scraper::{Html, Selector};
+use std::time::Duration;
 
 const AJOU_LINK: &'static str = "https://www.ajou.ac.kr/kr/ajou/notice.do";
 const NAVER_WEATHER: &'static str = "https://weather.naver.com/today/02117530?cpName=ACCUWEATHER"; // 아주대 지역 날씨
 
-pub fn notice_parse(_nums: Option<usize>) -> Result<Vec<Notice>, reqwest::Error> {
-    let mut ajou =
-        "https://www.ajou.ac.kr/kr/ajou/notice.do?mode=list&article.offset=0&articleLimit="
-            .to_string();
+pub fn notice_parse(
+    query_option: &str,
+    _nums: Option<usize>,
+) -> Result<Vec<Notice>, reqwest::Error> {
+    // let query = "?mode=list&article.offset=0&articleLimit=";
+
+    // query = ?mode=list&srSearchKey=&srSearchVal=키워드&article.offset=0&articleLimit=
+
+    let string;
+    let query = match query_option {
+        "ajou" => "?mode=list&article.offset=0&articleLimit=",
+        "category" => "?mode=list&articleLimit=5&srCategoryId=",
+        _ => {
+            string = format!(
+                "?mode=list&srSearchKey=&srSearchVal={}&article.offset=0&articleLimit=",
+                query_option
+            ); // format! has dropped so gotta save it to temp var
+            &string
+        }
+    };
 
     let nums_int = _nums.unwrap_or(5);
-    let nums_str = nums_int.to_string();
+    // ajou.push_str(&nums_str);
 
-    ajou.push_str(&nums_str);
-    // println!("Link: {}", ajou);
+    let url = [AJOU_LINK, query, &nums_int.to_string()].concat();
 
-    // Blocking NON-ASYNC
     let client = reqwest::blocking::Client::builder()
         .danger_accept_invalid_certs(true)
-        .build()?;
+        .connect_timeout(Duration::from_secs(2))
+        .build()
+        .unwrap();
 
     // header 없이 보내면 404
-    let res = client.get(ajou).header(USER_AGENT, "User-Agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.114 Safari/537.36").send()?;
-    let body = res.text()?;
+    let res = client
+        .get(url)
+        .header(USER_AGENT, MY_USER_AGENT)
+        .send()
+        .unwrap();
+    let body = res.text().unwrap();
 
     // println!("Body:\n{}", body);
 
@@ -39,6 +60,7 @@ pub fn notice_parse(_nums: Option<usize>) -> Result<Vec<Notice>, reqwest::Error>
     let dates = Selector::parse("span.b-date").unwrap();
     let writers = Selector::parse("span.b-writer").unwrap();
 
+    // let mut notices = vec![Notice::default(); nums_int];
     let mut notices: Vec<Notice> = vec![];
 
     let mut id_elements = document.select(&ids);
@@ -54,7 +76,13 @@ pub fn notice_parse(_nums: Option<usize>) -> Result<Vec<Notice>, reqwest::Error>
             .parse::<i32>()
         {
             Ok(some) => some,
-            Err(_) => continue, // 번호가 "공지"
+            Err(_) => {
+                date_elements.next().unwrap();
+                writer_elements.next().unwrap();
+                cate_elements.next().unwrap();
+                title_elements.next().unwrap();
+                continue; // 번호가 "공지"
+            }
         };
         // .unwrap();
 
@@ -115,12 +143,6 @@ pub fn notice_parse(_nums: Option<usize>) -> Result<Vec<Notice>, reqwest::Error>
         };
 
         notices.push(notice);
-
-        // (*notice).id = id;
-        // (*notice).title = title;
-        // (*notice).link = link;
-        // (*notice).date = date;
-        // (*notice).writer = writer;
     }
     // println!("{:?}", notices);
 
