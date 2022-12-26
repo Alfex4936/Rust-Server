@@ -2,7 +2,22 @@
 <p>
     <img width="680" src="https://github.com/Alfex4936/kakaoChatbot-Ajou/blob/main/imgs/chatbot.png">
 </p>
-<h1>카카오톡 챗봇 서버 (Rust)</h1>
+<h1>KakaoTalk ChatBot with Rust</h1>
+
+Welcome to the Ajou University Kakao Chatbot project!
+
+This chatbot is designed to provide information and convenience to students, staff, and faculty of Ajou University.
+
+The chatbot is built using the Rust programming language as the backend, with MongoDB serving as the database.
+It is hosted on an Amazon Web Services (AWS) Elastic Compute Cloud (EC2) server for reliable and scalable performance.
+
+With this chatbot, you can easily check the weather at Ajou University and access today's notices from the university.
+The chatbot also has a database of past notices, which can be accessed at any time.
+Additionally, you can check the usage status of the Ajou University library and view the university calendar.
+
+The chatbot also allows you to search for professors and other university staff, with the option to view their contact information including emails and phone numbers.
+
+We hope you find this chatbot helpful and we welcome your feedback and contributions to the project.
 
 [@아주대 공지 챗봇](http://pf.kakao.com/_RUcxnK) [MIT LICENSE](https://github.com/Alfex4936/KakaoChatBot-Golang/blob/main/LICENSE)
 
