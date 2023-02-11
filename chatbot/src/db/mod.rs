@@ -4,4 +4,4 @@ pub mod connection_mongo;
 pub mod connection_mysql;
 pub mod models;
 pub mod query;
-pub mod schema;
+// pub mod schema;

@@ -185,19 +185,30 @@ pub async fn weather_parse() -> Result<Weather, reqwest::Error> {
 
     // 최저 온도
     let min_temp = Selector::parse("span.lowest").unwrap();
-    let min_temp_element = document.select(&min_temp).next().unwrap();
-    let min_temp = min_temp_element.text().collect::<Vec<_>>()[1]
+    let mut min_temp_elements = document.select(&min_temp);
+    let min_temp = min_temp_elements.next().unwrap().text().collect::<Vec<_>>()[1]
         .trim()
         .to_string();
     let min_temp = min_temp.replace('°', "") + "도";
 
     // 최고 온도
     let max_temp = Selector::parse("span.highest").unwrap();
-    let max_temp_element = document.select(&max_temp).next().unwrap();
-    let max_temp = max_temp_element.text().collect::<Vec<_>>()[1]
+    let mut max_temp_elements = document.select(&max_temp);
+    let max_temp = max_temp_elements.next().unwrap().text().collect::<Vec<_>>()[1]
         .trim()
         .to_string();
     let max_temp = max_temp.replace('°', "") + "도";
+
+    // Tmrw
+    let tmrw_max_temp = max_temp_elements.next().unwrap().text().collect::<Vec<_>>()[1]
+        .trim()
+        .to_string();
+    let tmrw_min_temp = min_temp_elements.next().unwrap().text().collect::<Vec<_>>()[1]
+        .trim()
+        .to_string();
+
+    let tmrw_max_temp = tmrw_max_temp.replace('°', "") + "도";
+    let tmrw_min_temp = tmrw_min_temp.replace('°', "") + "도";
 
     // 현재 날씨
     let current_status = Selector::parse("span.weather.before_slash").unwrap();
@@ -259,6 +270,8 @@ pub async fn weather_parse() -> Result<Weather, reqwest::Error> {
         current_temp,
         min_temp,
         max_temp,
+        tmrw_min_temp,
+        tmrw_max_temp,
         current_status,
         sunset,
         rain_day,

@@ -2,25 +2,27 @@
 // use crate::db::connection::DbPool;
 use crate::db::query;
 use crate::routes::DbPool;
-use crate::utils::parser::{library_parse, people_parse, weather_parse, NAVER_WEATHER};
+use crate::utils::parser::{library_parse, meal_parse, people_parse, weather_parse, NAVER_WEATHER};
 use crate::CARD_IMAGES;
 
+use crate::routes::Kakao;
+use actix_web::{post, web, Responder};
+use chrono::prelude::Local;
 use kakao_rs::prelude::*;
-
-use actix_web::{post, web, HttpResponse, Responder};
 use rand::Rng;
 use serde_json::Value;
 
 const INTEL: &str = "031-219-";
 
-#[post("/info/weather")]
+#[post("/weather")]
 pub async fn get_weather() -> impl Responder {
     let weather = weather_parse().await.unwrap();
-    let description = format!("현재 날씨는 {}, {}\n최저기온 {}, 최고기온은 {}\n\n낮, 밤 강수 확률은 {}, {}\n미세먼지 농도는 {}\n자외선은 {}, 일몰은 {}",
+    let description = format!("현재 날씨는 {}, {}\n최저기온 {}, 최고기온은 {}\n\n낮, 밤 강수 확률은 {}, {}\n미세먼지 농도는 {}\n자외선은 {}, 일몰은 {}\n내일은 {}/{}",
         weather.current_status, weather.current_temp,
         weather.min_temp, weather.max_temp,
         weather.rain_day, weather.rain_night,
-        weather.fine_dust, weather.uv, weather.sunset);
+        weather.fine_dust, weather.uv, weather.sunset,
+        weather.tmrw_min_temp, weather.tmrw_max_temp);
 
     let mut result = Template::new();
 
@@ -36,21 +38,16 @@ pub async fn get_weather() -> impl Responder {
 
     result.add_output(basic_card.build());
 
-    HttpResponse::Ok()
-        .content_type("application/json")
-        .body(serde_json::to_string(&result).unwrap())
+    Kakao { template: result }
 }
 
-#[post("/info/schedule")]
+#[post("/schedule")]
 pub async fn get_schedule(conn: web::Data<DbPool>) -> impl Responder {
     let mut result = Template::new();
     let mut carousel = Carousel::new().set_type(BasicCard::id());
 
     let mut rng = rand::thread_rng();
 
-    #[cfg(not(feature = "mongo"))]
-    let db = &conn.get().unwrap();
-    #[cfg(feature = "mongo")]
     let db = &conn;
 
     for sched in query::show_scheds(db).await.unwrap() {
@@ -69,12 +66,10 @@ pub async fn get_schedule(conn: web::Data<DbPool>) -> impl Responder {
 
     result.add_output(carousel.build());
 
-    HttpResponse::Ok()
-        .content_type("application/json")
-        .body(serde_json::to_string(&result).unwrap())
+    Kakao { template: result }
 }
 
-#[post("/info/library")]
+#[post("/library")]
 pub async fn get_library() -> impl Responder {
     let mut result = Template::new();
     let library = match library_parse().await {
@@ -83,9 +78,7 @@ pub async fn get_library() -> impl Responder {
             result.add_qr(QuickReply::new("도서관 좌석", "ㄷ"));
             result.add_output(SimpleText::new("홈페이지 반응이 늦습니다. :(").build());
 
-            return HttpResponse::Ok()
-                .content_type("application/json")
-                .body(serde_json::to_string(&result).unwrap());
+            return Kakao { template: result };
         }
     };
 
@@ -109,12 +102,10 @@ pub async fn get_library() -> impl Responder {
     result.add_output(SimpleText::new("현재 중앙 도서관 좌석 현황입니다!").build());
     result.add_output(basic_card.build());
 
-    HttpResponse::Ok()
-        .content_type("application/json")
-        .body(serde_json::to_string(&result).unwrap())
+    Kakao { template: result }
 }
 
-#[post("/info/prof")]
+#[post("/prof")]
 pub async fn get_people(kakao: web::Json<Value>) -> impl Responder {
     let mut keyword = kakao["action"]["params"]["search"]
         .as_str()
@@ -123,32 +114,30 @@ pub async fn get_people(kakao: web::Json<Value>) -> impl Responder {
     keyword.retain(|c| !c.is_whitespace());
 
     let mut result = Template::new();
+
+    result.add_qr(QuickReply::new("인물 검색", "인물"));
+
     let mut carousel = Carousel::new();
 
     let mut people = match people_parse(&keyword).await {
         Ok(yes) => yes,
         _ => {
-            result.add_qr(QuickReply::new("인물 검색", "인물"));
             result.add_output(SimpleText::new("홈페이지 반응이 늦습니다. :(").build());
 
-            return HttpResponse::Ok()
-                .content_type("application/json")
-                .body(serde_json::to_string(&result).unwrap());
+            return Kakao { template: result };
         }
     };
 
     // result.add_qr(QuickReply::new("인물", "인물"));
     if people.phone_number.is_empty() {
         result.add_output(SimpleText::new(format!("{} 검색 결과가 없습니다.", keyword)).build());
-        return HttpResponse::Ok()
-            .content_type("application/json")
-            .body(serde_json::to_string(&result).unwrap());
+        return Kakao { template: result };
     } else if people.phone_number.len() > 10 {
         result.add_output(SimpleText::new("10개의 검색 결과만 불러왔습니다.").build());
         people.phone_number.resize(10, Default::default());
     } // if greater than 10
 
-    for person in &people.phone_number {
+    for person in people.phone_number.iter().take(10) {
         let basic_card = BasicCard::new()
             .set_title(format!(
                 "{} ({})",
@@ -177,15 +166,15 @@ pub async fn get_people(kakao: web::Json<Value>) -> impl Responder {
 
     result.add_output(carousel.build());
 
-    HttpResponse::Ok()
-        .content_type("application/json")
-        .body(serde_json::to_string(&result).unwrap())
+    Kakao { template: result }
 }
 
-#[post("/info/map")]
+#[post("/map")]
 pub async fn get_map() -> impl Responder {
     let mut result = Template::new();
-    result.add_output(SimpleText::new("아주대 지도 (Map)").build());
+    result.add_output(SimpleText::new("[아주대 지도 (Ajou Map)]").build());
+
+    result.add_output(SimpleText::new("https://www.ajou.ac.kr/en/intro/way01.do").build());
 
     result.add_output(
         SimpleImage::new(
@@ -195,7 +184,37 @@ pub async fn get_map() -> impl Responder {
         .build(),
     );
 
-    HttpResponse::Ok()
-        .content_type("application/json")
-        .body(serde_json::to_string(&result).unwrap())
+    Kakao { template: result }
+}
+
+#[post("/meal")]
+pub async fn get_meal_today() -> impl Responder {
+    let today = Local::now().format("%Y%m%d").to_string(); // "20220910"
+    let meal = meal_parse(today).await.unwrap();
+
+    // 현재 교직원(221)밖에
+    let mut result = Template::new();
+    result.add_output(SimpleText::new("[아주대 교직원 식당]").build());
+
+    let text = format!(
+        "점심: {}\n\n저녁: {}",
+        meal.data.lunch.unwrap_or("없음".to_string()),
+        meal.data.dinner.unwrap_or("없음".to_string())
+    );
+    result.add_output(SimpleText::new(text).build());
+
+    result.add_qr(QuickReply::new("교직원", "교직원"));
+    result.add_qr(QuickReply::new("ㅅㄷ", "ㅅㄷ"));
+    result.add_qr(QuickReply::new("학식", "학식"));
+
+    Kakao { template: result }
+}
+
+pub fn init_info(cfg: &mut web::ServiceConfig) {
+    cfg.service(get_weather);
+    cfg.service(get_schedule);
+    cfg.service(get_people);
+    cfg.service(get_library);
+    cfg.service(get_map);
+    cfg.service(get_meal_today);
 }

@@ -1,48 +1,11 @@
 #![allow(proc_macro_derive_resolution_fallback)]
 
-#[cfg(feature = "mongo")]
 use crate::routes::DbPool;
-#[cfg(not(feature = "mongo"))]
-use diesel;
-#[cfg(not(feature = "mongo"))]
-use diesel::prelude::*;
-#[cfg(feature = "mongo")]
 use futures::stream::TryStreamExt;
-#[cfg(feature = "mongo")]
 use mongodb::bson::doc;
 
 use crate::db::models::Notice;
 use crate::db::models::Schedule;
-
-#[cfg(not(feature = "mongo"))]
-use crate::db::schema::ajou_notices;
-#[cfg(not(feature = "mongo"))]
-use crate::db::schema::ajou_notices::dsl::*;
-#[cfg(not(feature = "mongo"))]
-use crate::db::schema::ajou_sched::dsl::*;
-
-#[cfg(not(feature = "mongo"))]
-pub async fn show_scheds(conn: &MysqlConnection) -> QueryResult<Vec<Schedule>> {
-    //posts.filter(published.eq(true))
-    ajou_sched.load::<Schedule>(&*conn)
-}
-
-#[cfg(not(feature = "mongo"))]
-// Load notices from MySQL db not from homepage
-pub async fn get_notices_by_date(
-    conn: &MysqlConnection,
-    _date: String,
-) -> QueryResult<Vec<Notice>> {
-    // let query = format!(
-    //     "SELECT * FROM ajou_notices WHERE date = {} ORDER BY id DESC",
-    //     _date
-    // );
-
-    ajou_notices
-        .filter(date.eq(_date))
-        .order(ajou_notices::id.desc()) // becuz of ambiguous
-        .load::<Notice>(&*conn)
-}
 
 /************* MONGO *************/
 #[cfg(feature = "mongo")]

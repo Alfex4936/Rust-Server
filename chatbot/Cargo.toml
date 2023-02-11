@@ -1,7 +1,9 @@
 [package]
 name = "rustserver"
-version = "1.0.0"
-edition = "2018"
+version = "1.0.1"
+edition = "2021"
+authors = ["Seok Won <ikr@kakao.com>"]
+license = "MIT"
 # build = "build.rs"
 
 [[bench]]
@@ -11,7 +13,7 @@ harness = false
 [dependencies]
 actix-rt = "2"
 actix-http = "3"
-actix-web = "4" 
+actix-web = "4"
 actix-cors = "0.6"
 # handlebars = { version = "4.1.0", features = ["dir_source"] }
 # tera = "1.12"
@@ -19,10 +21,8 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serde_derive = "1.0"
 reqwest = { version = "0.11", features = ["json", "blocking"] }
-dotenv = "0.15.0"
-r2d2 = "0.8"
-diesel = { version = "2", features = ["mysql", "r2d2"] }
-scraper = "0.13"
+# dotenv = "0.15.0"
+scraper = "0.14"
 chrono = "0.4"
 # unicode-segmentation = "1.8.0"
 kakao-rs = "0.3"
@@ -31,13 +31,11 @@ lazy_static = "1.4.0"
 # actix-ratelimit = "0.3.1"
 mongodb = "2"
 futures = "0.3"
-[target.'cfg(not(target_env = "msvc"))'.dependencies]
-jemallocator = "0.5"
 
 [dev-dependencies]
-criterion = "0.3"
+criterion = "0.4"
 [target.'cfg(not(target_env = "msvc"))'.dev.dependencies]
-pprof = { version = "0.10", features = ["flamegraph", "criterion"] }
+pprof = { version = "0.11", features = ["flamegraph", "criterion"] }
 
 [profile.dev]
 opt-level = 0

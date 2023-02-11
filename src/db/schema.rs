@@ -1,5 +1,5 @@
 diesel::table! {
-    ajou_sched (id) {
+    ajou_sched(id) {
         id -> Integer,
         start_date -> Varchar,
         end_date -> Varchar,
@@ -8,7 +8,7 @@ diesel::table! {
 }
 
 diesel::table! {
-    ajou_notices (id) {
+    ajou_notices(id) {
         id -> Integer,
         category -> Varchar,
         title -> Varchar,

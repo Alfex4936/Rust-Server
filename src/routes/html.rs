@@ -6,7 +6,7 @@ use rocket_contrib::templates::Template;
 
 #[get("/front/<nums>")]
 pub fn front_test(nums: usize) -> Template {
-    let notices = notice_parse(Some(nums)).unwrap();
+    let notices = notice_parse("ajou", Some(nums)).unwrap();
 
     let context = json!({
         "notices": notices,
@@ -19,7 +19,7 @@ pub fn front_test(nums: usize) -> Template {
 
 #[get("/test")]
 pub fn just_test() -> Template {
-    let notices = notice_parse(Some(15)).unwrap();
+    let notices = notice_parse("ajou", Some(15)).unwrap();
 
     let context = json!({
         "notices": notices,
@@ -56,7 +56,7 @@ impl Korean for chrono::DateTime<chrono::Local> {
 
 #[get("/kakao")]
 pub fn kakao_test() -> Template {
-    let notices = notice_parse(Some(15)).unwrap();
+    let notices = notice_parse("ajou", Some(15)).unwrap();
 
     let current = Local::now();
     let ap = current.kday(); // 오전/오후

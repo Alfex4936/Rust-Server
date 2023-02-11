@@ -26,9 +26,11 @@ mod kakao_json;
 mod routes;
 mod utils;
 
+pub const MY_USER_AGENT: &str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36";
+
 pub fn rocket() -> rocket::Rocket {
     rocket::ignite()
-        .manage(db::connection::init_pool())
+        // .manage(db::connection::init_pool())
         .mount(
             "/v1",
             routes![

@@ -1,13 +1,11 @@
 [package]
 name = "rustweb"
 version = "0.1.0"
-edition = "2018"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+edition = "2021"
 
 [dependencies]
 rocket = "0.4"
-rocket_contrib = { version = "0.4", features = ["handlebars_templates", "tera_templates"]}
+rocket_contrib = { version = "0.4.11", features = ["handlebars_templates", "tera_templates"]}
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serde_derive = "1.0"
@@ -17,9 +15,10 @@ diesel = { version = "1.4", features = ["mysql"] }
 dotenv = "0.15"
 r2d2 = "*"
 r2d2-diesel = "*"
-scraper = "0.12"
+scraper = "0.13"
 chrono = "0.4"
-unicode-segmentation = "1.8.0"
+unicode-segmentation = "1.9.0"
+futures = "0.3"
 
 [profile.dev]
 opt-level = 0

@@ -1,14 +1,13 @@
 #![allow(proc_macro_derive_resolution_fallback)]
 #![allow(dead_code)]
 
-use crate::db::schema::ajou_notices;
-use crate::db::schema::ajou_sched;
+// use crate::db::schema::ajou_notices;
+// use crate::db::schema::ajou_sched;
 // use diesel::prelude::*;
 
 use serde_json::Value;
 
-#[derive(Queryable, AsChangeset, Serialize, Deserialize, Debug, Default, Clone)]
-#[diesel(table_name = ajou_notices)]
+#[derive(Serialize, Deserialize, Debug, Default, Clone)]
 pub struct Notice {
     pub id: i32,
     pub category: String,
@@ -18,8 +17,7 @@ pub struct Notice {
     pub writer: String,
 }
 
-#[derive(Queryable, AsChangeset, Serialize, Deserialize)]
-#[diesel(table_name = ajou_sched)]
+#[derive(Serialize, Deserialize)]
 pub struct Schedule {
     // pub id: i32,
     pub start_date: String,
@@ -31,6 +29,8 @@ pub struct Schedule {
 pub struct Weather {
     pub max_temp: String,
     pub min_temp: String,
+    pub tmrw_min_temp: String,
+    pub tmrw_max_temp: String,
     pub current_temp: String,
     pub current_status: String,
     // pub wind_chill: String, // 체감온도

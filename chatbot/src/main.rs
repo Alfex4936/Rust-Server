@@ -1,59 +1,47 @@
+#![allow(proc_macro_derive_resolution_fallback)]
+
 use actix_cors::Cors;
+use std::time::Duration;
 // use actix_ratelimit::{MemoryStore, MemoryStoreActor, RateLimiter};
 use actix_web::{middleware, web, App, HttpServer};
 
-#[cfg(not(target_env = "msvc"))]
-use jemallocator::Jemalloc;
-
-#[cfg(not(target_env = "msvc"))]
-#[global_allocator]
-static GLOBAL: Jemalloc = Jemalloc;
+// fn print_type_of<T>(_: &T) {
+//     println!("{}", std::any::type_name::<T>())
+// }
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    // std::env::set_var("RUST_LOG", "info,actix_web=info");
+    // Set the logging level for the actix_web crate to info
+    //std::env::set_var("RUST_LOG", "info,actix_web=info");
 
-    #[cfg(not(feature = "mongo"))]
-    let data = web::Data::new(rustserver::connection_mysql::init_pool());
-    #[cfg(feature = "mongo")]
+    // Log the type of the get_notices function, which returns a reference to a string
+    // print_type_of(&rustserver::route::get_notices); // &str
+
+    // Initialize the MongoDB connection
     let data = web::Data::new(rustserver::connection_mongo::init_mongo().await);
 
-    // start http server
+    // Start the HTTP server
     HttpServer::new(move || {
+        // Set up CORS with a maximum age of 3600 seconds, allowing only GET and POST methods
         let cors = Cors::default()
             .max_age(3600)
             .allowed_methods(vec!["GET", "POST"]);
-        // let store = MemoryStore::new();
-        // .allowed_origin("*")
-        // .allowed_methods(vec!["GET", "POST"])
-        // .max_age(3600);
+
         App::new()
             .wrap(cors)
-            // Limitation: 70 Requests / Second
-            // .wrap(
-            //     RateLimiter::new(MemoryStoreActor::from(store.clone()).start())
-            //         .with_interval(Duration::from_secs(60))
-            //         .with_max_requests(70),
-            // )
-            .app_data(data.clone()) // <- store db pool in app state
-            .wrap(middleware::Logger::default())
-            // .service(rustserver::test::hello)
-            // .service(rustserver::test::db_test)
-            .service(rustserver::route::get_notices)
-            .service(rustserver::notice::get_today_notice)
-            .service(rustserver::notice::get_more_today_notice)
-            .service(rustserver::notice::get_yesterday_notice)
-            .service(rustserver::notice::get_last_notice)
-            .service(rustserver::notice::get_keyword_notice)
-            .service(rustserver::notice::get_category)
-            .service(rustserver::notice::get_category_notice)
-            .service(rustserver::info::get_weather)
-            .service(rustserver::info::get_schedule)
-            .service(rustserver::info::get_library)
-            .service(rustserver::info::get_people)
-            .service(rustserver::info::get_map)
+            .app_data(data.clone()) // clone the MongoDB connection data for each HTTP request
+            .wrap(middleware::Logger::default()) // Use the default logger for request/response logs
+            .service(
+                // Mount the notice routes under the "/notice" path
+                web::scope("/notice").configure(rustserver::notice::init_notice),
+            )
+            .service(
+                // Mount the info routes under the "/info" path
+                web::scope("/info").configure(rustserver::info::init_info),
+            )
     })
-    .bind(rustserver::SERVER)?
-    .run()
+    .keep_alive(Duration::from_secs(10)) // Keep the connection alive for 10 seconds
+    .bind(rustserver::SERVER)? // Bind to the server address specified in the rustserver module
+    .run() // Start the HTTP server
     .await
 }

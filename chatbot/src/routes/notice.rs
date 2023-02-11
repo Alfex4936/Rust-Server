@@ -10,7 +10,7 @@ use crate::utils::parser::{notice_parse, AJOU_LINK};
 
 use kakao_rs::prelude::*;
 
-use actix_web::{post, web, HttpResponse, Responder};
+use actix_web::{get, post, web, HttpResponse, Responder};
 use chrono::prelude::Local;
 use chrono::Duration;
 use lazy_static::lazy_static;
@@ -41,7 +41,7 @@ lazy_static! {
     };
 }
 
-#[post("/notice/last")]
+#[post("/last")]
 pub async fn get_last_notice() -> impl Responder {
     let mut result = Template::new();
     result.add_qr(QuickReply::new("오늘", "오늘 공지 보여줘"));
@@ -92,7 +92,7 @@ pub async fn get_last_notice() -> impl Responder {
         .body(serde_json::to_string(&result).unwrap())
 }
 
-#[post("/notice/today")]
+#[post("/today")]
 pub async fn get_today_notice(_: web::Json<Value>) -> impl Responder {
     // println!("{:#?}", kakao);
     let mut result = Template::new();
@@ -184,7 +184,7 @@ pub async fn get_today_notice(_: web::Json<Value>) -> impl Responder {
         .body(serde_json::to_string(&result).unwrap())
 }
 
-#[post("/notice/today2")]
+#[post("/today2")]
 pub async fn get_more_today_notice(_: web::Json<Value>) -> impl Responder {
     // println!("{:#?}", kakao);
     let mut result = Template::new();
@@ -243,7 +243,7 @@ pub async fn get_more_today_notice(_: web::Json<Value>) -> impl Responder {
         .body(serde_json::to_string(&result).unwrap())
 }
 
-#[post("/notice/yesterday")]
+#[post("/yesterday")]
 pub async fn get_yesterday_notice(conn: web::Data<DbPool>) -> impl Responder {
     let mut result = Template::new();
     result.add_qr(QuickReply::new("오늘", "오늘 공지 보여줘"));
@@ -252,9 +252,6 @@ pub async fn get_yesterday_notice(conn: web::Data<DbPool>) -> impl Responder {
     let date = Local::now() - Duration::days(1);
     let yesterday = date.format("%y.%m.%d").to_string();
 
-    #[cfg(not(feature = "mongo"))]
-    let db = &conn.get().unwrap();
-    #[cfg(feature = "mongo")]
     let db = &conn;
 
     let mut notices = query::get_notices_by_date(db, yesterday.to_owned())
@@ -315,7 +312,7 @@ pub async fn get_yesterday_notice(conn: web::Data<DbPool>) -> impl Responder {
         .body(serde_json::to_string(&result).unwrap())
 }
 
-#[post("/notice/search")]
+#[post("/search")]
 pub async fn get_keyword_notice(kakao: web::Json<Value>) -> impl Responder {
     let kakao_keyword = &kakao["action"]["params"];
     let mut result = Template::new();
@@ -402,7 +399,7 @@ pub async fn get_keyword_notice(kakao: web::Json<Value>) -> impl Responder {
         .body(serde_json::to_string(&result).unwrap())
 }
 
-#[post("/notice/ask")]
+#[post("/ask")]
 pub async fn get_category() -> impl Responder {
     // println!("{:#?}", kakao);
     // let mut result = Template::new();
@@ -410,7 +407,7 @@ pub async fn get_category() -> impl Responder {
     // result.add_qr(QuickReply::new("학사일정", "학사일정"));
     // result.add_qr(QuickReply::new("비교과", "비교과"));
     // result.add_qr(QuickReply::new("장학", "장학"));
-    // result.add_qr(QuickReply::new("취업", "취업줘"));
+    // result.add_qr(QuickReply::new("취업", "취업"));
     // result.add_qr(QuickReply::new("사무", "사무"));
     // result.add_qr(QuickReply::new("행사", "행사"));
     // result.add_qr(QuickReply::new("파란학기제", "파란학기제"));
@@ -426,10 +423,10 @@ pub async fn get_category() -> impl Responder {
 
     HttpResponse::Ok()
         .content_type("application/json")
-        .body(r#"{"template":{"outputs":[{"simpleText":{"text":"무슨 공지를 보고 싶으신가요?"}}],"quickReplies":[{"action":"message","label":"학사","messageText":"학사"},{"action":"message","label":"학사일정","messageText":"학사일정"},{"action":"message","label":"비교과","messageText":"비교과"},{"action":"message","label":"장학","messageText":"장학"},{"action":"message","label":"취업","messageText":"취업줘"},{"action":"message","label":"사무","messageText":"사무"},{"action":"message","label":"행사","messageText":"행사"},{"action":"message","label":"파란학기제","messageText":"파란학기제"},{"action":"message","label":"학술","messageText":"학술"},{"action":"message","label":"입학","messageText":"입학"},{"action":"message","label":"기타","messageText":"기타"}]},"version":"2.0"}"#)
+        .body(r#"{"template":{"outputs":[{"simpleText":{"text":"무슨 공지를 보고 싶으신가요?"}}],"quickReplies":[{"action":"message","label":"학사","messageText":"학사"},{"action":"message","label":"학사일정","messageText":"학사일정"},{"action":"message","label":"비교과","messageText":"비교과"},{"action":"message","label":"장학","messageText":"장학"},{"action":"message","label":"취업","messageText":"취업"},{"action":"message","label":"사무","messageText":"사무"},{"action":"message","label":"행사","messageText":"행사"},{"action":"message","label":"파란학기제","messageText":"파란학기제"},{"action":"message","label":"학술","messageText":"학술"},{"action":"message","label":"입학","messageText":"입학"},{"action":"message","label":"기타","messageText":"기타"}]},"version":"2.0"}"#)
 }
 
-#[post("/notice/category")]
+#[post("/category")]
 pub async fn get_category_notice(kakao: web::Json<Value>) -> impl Responder {
     let kakao_keyword = &kakao["action"]["params"];
     let mut result = Template::new();
@@ -518,4 +515,22 @@ pub async fn get_category_notice(kakao: web::Json<Value>) -> impl Responder {
     HttpResponse::Ok()
         .content_type("application/json")
         .body(serde_json::to_string(&result).unwrap())
+}
+
+#[get("/{nums}")]
+pub async fn get_notices(nums: web::Path<usize>) -> impl Responder {
+    // println!("{}", kakao["userRequest"]["utterance"].as_str().unwrap()); // 발화문
+    let result = notice_parse("ajou", Some(nums.into_inner())).await.unwrap();
+    HttpResponse::Ok().json(result)
+}
+
+pub fn init_notice(cfg: &mut web::ServiceConfig) {
+    cfg.service(get_today_notice);
+    cfg.service(get_more_today_notice);
+    cfg.service(get_last_notice);
+    cfg.service(get_yesterday_notice);
+    cfg.service(get_keyword_notice);
+    cfg.service(get_category);
+    cfg.service(get_category_notice);
+    cfg.service(get_notices);
 }
