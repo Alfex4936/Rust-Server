@@ -17,55 +17,43 @@ pub async fn notice_parse(
     query_option: &str,
     _nums: Option<usize>,
 ) -> Result<Vec<Notice>, reqwest::Error> {
-    // let query = "?mode=list&article.offset=0&articleLimit=";
-
-    // query = ?mode=list&srSearchKey=&srSearchVal=키워드&article.offset=0&articleLimit=
-
-    let string;
+    let formatted_query;
     let query = match query_option {
         "ajou" => "?mode=list&article.offset=0&articleLimit=",
         "category" => "?mode=list&articleLimit=5&srCategoryId=",
         _ => {
-            string = format!(
+            formatted_query = format!(
                 "?mode=list&srSearchKey=&srSearchVal={}&article.offset=0&articleLimit=",
                 query_option
-            ); // format! has dropped so gotta save it to temp var
-            &string
+            );
+            &formatted_query
         }
     };
 
     let nums_int = _nums.unwrap_or(5);
-    // ajou.push_str(&nums_str);
-
-    let url = [AJOU_LINK, query, &nums_int.to_string()].concat();
+    let url = format!("{}{}{}", AJOU_LINK, query, nums_int);
 
     let client = reqwest::Client::builder()
         .danger_accept_invalid_certs(true)
         .connect_timeout(Duration::from_secs(2))
         .build()?;
 
-    // header 없이 보내면 404
     let res = client
-        .get(url)
+        .get(&url)
         .header(USER_AGENT, MY_USER_AGENT)
         .send()
         .await?;
     let body = res.text().await?;
 
-    // println!("Body:\n{}", body);
-
-    // HTML Parse
     let document = Html::parse_document(&body);
     let a_selector = Selector::parse("a").unwrap();
 
-    // Notice has id, title, date, link, writer
     let ids = Selector::parse("td.b-num-box").unwrap();
-    let cates = Selector::parse("span.b-cate").unwrap(); // 카테고리
-    let titles = Selector::parse("div.b-title-box").unwrap(); // includes links
+    let cates = Selector::parse("span.b-cate").unwrap();
+    let titles = Selector::parse("div.b-title-box").unwrap();
     let dates = Selector::parse("span.b-date").unwrap();
     let writers = Selector::parse("span.b-writer").unwrap();
 
-    // let mut notices = vec![Notice::default(); nums_int];
     let mut notices: Vec<Notice> = vec![];
 
     let mut id_elements = document.select(&ids);
@@ -74,69 +62,58 @@ pub async fn notice_parse(
     let mut date_elements = document.select(&dates);
     let mut writer_elements = document.select(&writers);
 
-    // struct Notice
     for id_element in &mut id_elements {
-        let id = match id_element.text().collect::<Vec<_>>()[0]
-            .trim() // " 12345 "
-            .parse::<i32>()
-        {
+        let id = match id_element.text().next().unwrap().trim().parse::<i32>() {
             Ok(some) => some,
             Err(_) => {
                 date_elements.next().unwrap();
                 writer_elements.next().unwrap();
                 cate_elements.next().unwrap();
                 title_elements.next().unwrap();
-                continue; // 번호가 "공지"
+                continue;
             }
         };
-        // .unwrap();
 
-        let date_element = date_elements.next().unwrap();
-        let date = date_element.text().collect::<Vec<_>>()[0]
+        let date = date_elements
+            .next()
+            .unwrap()
+            .text()
+            .next()
+            .unwrap()
             .trim()
-            .to_string(); // "2021-07-15"
-
-        let writer_element = writer_elements.next().unwrap();
-        let writer = writer_element.text().collect::<Vec<_>>();
-        let writer = if writer.is_empty() {
-            "알 수 없음".to_string()
-        } else {
-            writer[0].trim().to_string() // "가나다라마"
-        };
-
-        let cate_element = cate_elements.next().unwrap();
-        let category = cate_element.text().collect::<Vec<_>>()[0]
+            .to_string();
+        let writer = writer_elements
+            .next()
+            .unwrap()
+            .text()
+            .next()
+            .unwrap_or("알 수 없음")
             .trim()
-            .to_string(); // " 학사 "
+            .to_string();
+        let category = cate_elements
+            .next()
+            .unwrap()
+            .text()
+            .next()
+            .unwrap()
+            .trim()
+            .to_string();
 
         let title_element = title_elements.next().unwrap();
         let inner_a = title_element.select(&a_selector).next().unwrap();
-
         let mut title = inner_a.value().attr("title").unwrap().to_string();
-        let link = AJOU_LINK.to_string() + inner_a.value().attr("href").unwrap();
+        let link = format!("{}{}", AJOU_LINK, inner_a.value().attr("href").unwrap());
 
-        // Check duplication. title: [writer] blah -> title: [blah]
-        let dup = "[".to_string() + &writer + "]";
-
+        let dup = format!("[{}]", writer);
         if title.contains(&dup) {
             title = title.replace(&dup, "");
-            // title.replace_range(0..dup.len(), "");
-        }
-        // println!("id: {}, title: {}, link: {}, date: {}, writer: {}", id, title, link, date, writer);
-
-        let useless = " 자세히 보기".to_string();
-        if title.contains(&useless) {
-            title = title.replace(&useless, "");
         }
 
-        let useless = "(재공지)".to_string();
-        if title.contains(&useless) {
-            title = title.replace(&useless, "");
-        }
-
-        title = title.trim().to_string();
-
-        // title.retain(|c| !r#"~「」"#.contains(c));
+        title = title
+            .replace(" 자세히 보기", "")
+            .replace("(재공지)", "")
+            .trim()
+            .to_string();
 
         let notice = Notice {
             id,
@@ -149,9 +126,7 @@ pub async fn notice_parse(
 
         notices.push(notice);
     }
-    // println!("{:?}", notices);
 
-    // notices.reverse();
     Ok(notices)
 }
 
