@@ -1,5 +1,3 @@
-#![allow(proc_macro_derive_resolution_fallback)]
-
 use crate::routes::DbPool;
 use futures::stream::TryStreamExt;
 use mongodb::bson::doc;

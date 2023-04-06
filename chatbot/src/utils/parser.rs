@@ -1,7 +1,9 @@
 use crate::db::models::{Library, Meal, Notice, People, Weather};
 use crate::MY_USER_AGENT;
+use lazy_static::lazy_static;
 use reqwest::header::USER_AGENT;
 use scraper::{Html, Selector};
+use std::borrow::Cow;
 use std::collections::HashMap;
 use std::time::Duration;
 
@@ -10,35 +12,35 @@ pub const NAVER_WEATHER: &str = "https://m.search.naver.com/search.naver?sm=tab_
 pub const NAVER_WEATHER_ICON: &str = "https://weather.naver.com/today/02117530?cpName=ACCUWEATHER"; // 아주대 지역 날씨는
 pub const AJOU_LIBRARY: &str = env!("AJOU_LIBRARY"); // 아주대 중앙 도서관
 pub const AJOU_PEOPLE: &str = env!("AJOU_PEOPLE"); // 아주대 인물 검색
-pub const AJOU_MEAL: &str = env!("AJOU_MEAL"); // 아주대 인물 검색
-                                               // pub const AJOU_MEAL: &str = env!("AJOU_MEAL"); // 아주대 학식
+pub const AJOU_MEAL: &str = env!("AJOU_MEAL"); // 아주대 학식
+
+lazy_static! {
+    static ref CLIENT: reqwest::Client = reqwest::Client::builder()
+        .danger_accept_invalid_certs(true)
+        .timeout(Duration::from_secs(5))
+        .connect_timeout(Duration::from_secs(5))
+        .user_agent(MY_USER_AGENT)
+        .build()
+        .unwrap();
+}
 
 pub async fn notice_parse(
     query_option: &str,
     _nums: Option<usize>,
 ) -> Result<Vec<Notice>, reqwest::Error> {
-    let formatted_query;
-    let query = match query_option {
-        "ajou" => "?mode=list&article.offset=0&articleLimit=",
-        "category" => "?mode=list&articleLimit=5&srCategoryId=",
-        _ => {
-            formatted_query = format!(
-                "?mode=list&srSearchKey=&srSearchVal={}&article.offset=0&articleLimit=",
-                query_option
-            );
-            &formatted_query
-        }
+    let query: Cow<str> = match query_option {
+        "ajou" => Cow::Borrowed("?mode=list&article.offset=0&articleLimit="),
+        "category" => Cow::Borrowed("?mode=list&articleLimit=5&srCategoryId="),
+        _ => Cow::Owned(format!(
+            "?mode=list&srSearchKey=&srSearchVal={}&article.offset=0&articleLimit=",
+            query_option
+        )),
     };
 
     let nums_int = _nums.unwrap_or(5);
     let url = format!("{}{}{}", AJOU_LINK, query, nums_int);
 
-    let client = reqwest::Client::builder()
-        .danger_accept_invalid_certs(true)
-        .connect_timeout(Duration::from_secs(2))
-        .build()?;
-
-    let res = client
+    let res = CLIENT
         .get(&url)
         .header(USER_AGENT, MY_USER_AGENT)
         .send()
@@ -131,15 +133,8 @@ pub async fn notice_parse(
 }
 
 pub async fn weather_parse() -> Result<Weather, reqwest::Error> {
-    let client = reqwest::Client::builder()
-        .danger_accept_invalid_certs(true)
-        .timeout(Duration::from_secs(5))
-        .connect_timeout(Duration::from_secs(2))
-        .user_agent(MY_USER_AGENT)
-        .build()?;
-
-    let res = client.get(NAVER_WEATHER).send().await?;
-    let res2 = client.get(NAVER_WEATHER_ICON).send().await?;
+    let res = CLIENT.get(NAVER_WEATHER).send().await?;
+    let res2 = CLIENT.get(NAVER_WEATHER_ICON).send().await?;
 
     let body = res.text().await?;
     let body2 = res2.text().await?;
@@ -278,13 +273,8 @@ pub async fn weather_parse() -> Result<Weather, reqwest::Error> {
 }
 
 pub async fn library_parse() -> Result<Library, reqwest::Error> {
-    let client = reqwest::Client::builder()
-        .danger_accept_invalid_certs(true)
-        .connect_timeout(Duration::from_secs(2))
-        .build()?;
-
     // header 없이 보내면 404
-    let res = client
+    let res = CLIENT
         .get(AJOU_LIBRARY)
         .header(USER_AGENT, MY_USER_AGENT)
         .send()
@@ -298,15 +288,10 @@ pub async fn library_parse() -> Result<Library, reqwest::Error> {
 }
 
 pub async fn people_parse(keyword: &str) -> Result<People, reqwest::Error> {
-    let client = reqwest::Client::builder()
-        .danger_accept_invalid_certs(true)
-        .connect_timeout(Duration::from_secs(2))
-        .build()?;
-
     let mut map = HashMap::new();
     map.insert("keyword", keyword);
 
-    let res = client
+    let res = CLIENT
         .post(AJOU_PEOPLE)
         .header(USER_AGENT, MY_USER_AGENT)
         .json(&map)
@@ -321,17 +306,12 @@ pub async fn people_parse(keyword: &str) -> Result<People, reqwest::Error> {
 }
 
 pub async fn meal_parse(date: String) -> Result<Meal, reqwest::Error> {
-    let client = reqwest::Client::builder()
-        .danger_accept_invalid_certs(true)
-        .connect_timeout(Duration::from_secs(2))
-        .build()?;
-
     let mut map = HashMap::new();
-    map.insert("categoryId", "221"); // 221: 교직원, 교직원밖에 정보 없음
+    map.insert("categoryId", "63"); // TODO 221: 교직원, 63, 기숙사 식당
     map.insert("yyyymmdd", &date);
 
     // header 없이 보내면 404
-    let res = client
+    let res = CLIENT
         .post(AJOU_MEAL)
         .header(USER_AGENT, MY_USER_AGENT)
         .json(&map)

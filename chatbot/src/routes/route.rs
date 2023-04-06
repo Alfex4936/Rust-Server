@@ -1,4 +1,3 @@
-#![allow(proc_macro_derive_resolution_fallback)]
 use crate::utils::parser::notice_parse;
 
 use actix_web::{get, web, HttpResponse, Responder};

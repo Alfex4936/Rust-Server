@@ -1,5 +1,3 @@
-#![allow(proc_macro_derive_resolution_fallback)]
-
 use actix_cors::Cors;
 use std::time::Duration;
 // use actix_ratelimit::{MemoryStore, MemoryStoreActor, RateLimiter};

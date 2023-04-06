@@ -1,4 +1,3 @@
-#![allow(proc_macro_derive_resolution_fallback)]
 // use crate::db::connection::DbPool;
 use crate::db::query;
 use crate::routes::DbPool;
@@ -189,12 +188,12 @@ pub async fn get_map() -> impl Responder {
 
 #[post("/meal")]
 pub async fn get_meal_today() -> impl Responder {
-    let today = Local::now().format("%Y%m%d").to_string(); // "20220910"
+    let today = Local::now().format("%Y-%m-%d").to_string(); // "2022-09-10"
     let meal = meal_parse(today).await.unwrap();
 
     // 현재 교직원(221)밖에
     let mut result = Template::new();
-    result.add_output(SimpleText::new("[아주대 교직원 식당]").build());
+    result.add_output(SimpleText::new("[아주대 기숙사 식당]").build());
 
     let text = format!(
         "점심: {}\n\n저녁: {}",

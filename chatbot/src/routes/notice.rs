@@ -1,4 +1,3 @@
-#![allow(proc_macro_derive_resolution_fallback)]
 // use crate::db::connection::DbPool;
 
 use crate::routes::DbPool;

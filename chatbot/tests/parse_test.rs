@@ -45,8 +45,8 @@ mod tests {
         let today = Local::now().format("%Y%m%d").to_string(); // "20220910"
         println!("{today}");
 
-        let meal = meal_parse("20220908".to_string()).await.unwrap();
-        println!("{:#?}", meal);
+        let meal = meal_parse(today).await.unwrap();
+        // println!("{:#?}", meal);
 
         let text = format!(
             "점심: {}\n\n저녁: {}",

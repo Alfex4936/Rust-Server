@@ -1,5 +1,3 @@
-#![allow(proc_macro_derive_resolution_fallback)]
-
 use crate::info::*;
 use crate::notice::*;
 use crate::route::{dummy, get_notices};
