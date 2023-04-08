@@ -1,7 +1,7 @@
-use crate::db::models::{Library, Meal, Notice, People, Weather};
+use crate::db::models::{CourseResp, Library, Meal, Notice, People, Weather};
 use crate::MY_USER_AGENT;
 use lazy_static::lazy_static;
-use reqwest::header::USER_AGENT;
+use reqwest::header::{HeaderMap, HeaderValue, CONTENT_TYPE, COOKIE, USER_AGENT};
 use scraper::{Html, Selector};
 use std::borrow::Cow;
 use std::collections::HashMap;
@@ -13,6 +13,7 @@ pub const NAVER_WEATHER_ICON: &str = "https://weather.naver.com/today/02117530?c
 pub const AJOU_LIBRARY: &str = env!("AJOU_LIBRARY"); // 아주대 중앙 도서관
 pub const AJOU_PEOPLE: &str = env!("AJOU_PEOPLE"); // 아주대 인물 검색
 pub const AJOU_MEAL: &str = env!("AJOU_MEAL"); // 아주대 학식
+pub const AJOU_COURSE: &str = "https://mhaksa.ajou.ac.kr:30443/nt/cvt.do"; // 아주대 학식
 const DEFAULT_NUM_ARTICLES: usize = 7;
 
 lazy_static! {
@@ -334,4 +335,37 @@ pub async fn meal_parse(date: String, res: u8) -> Result<Meal, reqwest::Error> {
     }
 
     Ok(meal)
+}
+
+pub async fn course_parse(str_submatt_fg: &str) -> Result<CourseResp, reqwest::Error> {
+    let payload = serde_json::json!({
+        "url": "uni/uni/cour/lssn/findCourLecturePlanDocumentReg.action",
+        "param": {
+            "strYy": "2023",
+            "strShtmCd": "U0002001",
+            "strSubmattFg": str_submatt_fg,
+            "strSustcd": "",
+            "strMjCd": "",
+            "strSubmattFldFg": "",
+            "strCoopOpenYn": "공동개설"
+        }
+    });
+
+    // Create a HeaderMap and insert the necessary headers
+    let mut headers = HeaderMap::new();
+    headers.insert(USER_AGENT, HeaderValue::from_static("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36"));
+    headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
+    headers.insert(COOKIE, HeaderValue::from_static("JSESSIONID=Gxs59IKpcuWW2aY0cbCkFUngFbkJfOYfaSYg1F5dQgYaFAF1xJBTckVhiEsJcZfR.chusa_servlet_HAKSA01;"));
+
+    let res = CLIENT
+        .post(AJOU_COURSE)
+        .headers(headers)
+        .json(&payload)
+        .send()
+        .await?;
+
+    let body = res.text().await?;
+
+    let courses: CourseResp = serde_json::from_str(&body).unwrap();
+    Ok(courses)
 }

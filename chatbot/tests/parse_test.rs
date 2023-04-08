@@ -8,6 +8,8 @@ use rustserver::utils::parser::{
 
 #[cfg(test)]
 mod tests {
+    use rustserver::utils::parser::course_parse;
+
     use super::*;
 
     #[actix_rt::test]
@@ -65,5 +67,12 @@ mod tests {
             meal.data.dinner.unwrap_or("없음".to_string())
         );
         println!("{text}");
+    }
+
+    #[actix_rt::test]
+    async fn course_test() {
+        let course = course_parse("U0209005").await.unwrap();
+
+        println!("{:#?}", course.DatasetList.DS_COUR120[0]);
     }
 }
