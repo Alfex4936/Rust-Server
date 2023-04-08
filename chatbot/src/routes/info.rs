@@ -188,22 +188,29 @@ pub async fn get_map() -> impl Responder {
 
 #[post("/meal")]
 pub async fn get_meal_today() -> impl Responder {
-    let today = Local::now().format("%Y-%m-%d").to_string(); // "2022-09-10"
-    let meal = meal_parse(today).await.unwrap();
+    let today = Local::now().format("%Y%m%d").to_string(); // "20230410"
+    let meal = meal_parse(today.to_owned(), 63).await.unwrap();
 
-    // 현재 교직원(221)밖에
+    // 기숙사 식당(63)
     let mut result = Template::new();
-    result.add_output(SimpleText::new("[아주대 기숙사 식당]").build());
-
     let text = format!(
-        "점심: {}\n\n저녁: {}",
+        "점심: {}\n저녁: {}",
         meal.data.lunch.unwrap_or("없음".to_string()),
         meal.data.dinner.unwrap_or("없음".to_string())
     );
-    result.add_output(SimpleText::new(text).build());
+    result.add_output(SimpleText::new(format!("[아주대 기숙사 식당]\n{text}")).build());
 
-    result.add_qr(QuickReply::new("교직원", "교직원"));
-    result.add_qr(QuickReply::new("ㅅㄷ", "ㅅㄷ"));
+    // 교직원 식당(221)
+    let meal = meal_parse(today.to_owned(), 221).await.unwrap();
+
+    let text = format!(
+        "점심: {}\n저녁: {}",
+        meal.data.lunch.unwrap_or("없음".to_string()),
+        meal.data.dinner.unwrap_or("없음".to_string())
+    );
+    result.add_output(SimpleText::new(format!("[아주대 교직원 식당]\n{text}")).build());
+
+    result.add_qr(QuickReply::new("ㅂ", "ㅂ"));
     result.add_qr(QuickReply::new("학식", "학식"));
 
     Kakao { template: result }

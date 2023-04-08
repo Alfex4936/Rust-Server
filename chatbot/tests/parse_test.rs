@@ -20,6 +20,7 @@ mod tests {
     async fn notice_test() {
         let notices = notice_parse("ajou", Some(5)).await.unwrap();
         println!("{:#?}", notices);
+        assert_eq!(notices.len(), 5);
     }
 
     #[actix_rt::test]
@@ -45,7 +46,17 @@ mod tests {
         let today = Local::now().format("%Y%m%d").to_string(); // "20220910"
         println!("{today}");
 
-        let meal = meal_parse(today).await.unwrap();
+        let meal = meal_parse(today.to_owned(), 63).await.unwrap();
+        // println!("{:#?}", meal);
+
+        let text = format!(
+            "점심: {}\n\n저녁: {}",
+            meal.data.lunch.unwrap_or("없음".to_string()),
+            meal.data.dinner.unwrap_or("없음".to_string())
+        );
+        println!("{text}");
+
+        let meal = meal_parse(today.to_owned(), 221).await.unwrap();
         // println!("{:#?}", meal);
 
         let text = format!(

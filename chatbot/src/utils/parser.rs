@@ -13,6 +13,7 @@ pub const NAVER_WEATHER_ICON: &str = "https://weather.naver.com/today/02117530?c
 pub const AJOU_LIBRARY: &str = env!("AJOU_LIBRARY"); // 아주대 중앙 도서관
 pub const AJOU_PEOPLE: &str = env!("AJOU_PEOPLE"); // 아주대 인물 검색
 pub const AJOU_MEAL: &str = env!("AJOU_MEAL"); // 아주대 학식
+const DEFAULT_NUM_ARTICLES: usize = 7;
 
 lazy_static! {
     static ref CLIENT: reqwest::Client = reqwest::Client::builder()
@@ -24,29 +25,41 @@ lazy_static! {
         .unwrap();
 }
 
+fn get_query(query_option: &str) -> Cow<'_, str> {
+    match query_option {
+        "ajou" => "?mode=list&article.offset=0&articleLimit=".into(),
+        "category" => "?mode=list&articleLimit=5&srCategoryId=".into(),
+        _ => format!(
+            "?mode=list&srSearchKey=&srSearchVal={}&article.offset=0&articleLimit=",
+            query_option
+        )
+        .into(),
+    }
+}
+
 pub async fn notice_parse(
     query_option: &str,
     _nums: Option<usize>,
 ) -> Result<Vec<Notice>, reqwest::Error> {
-    let query: Cow<str> = match query_option {
-        "ajou" => Cow::Borrowed("?mode=list&article.offset=0&articleLimit="),
-        "category" => Cow::Borrowed("?mode=list&articleLimit=5&srCategoryId="),
-        _ => Cow::Owned(format!(
-            "?mode=list&srSearchKey=&srSearchVal={}&article.offset=0&articleLimit=",
-            query_option
-        )),
-    };
+    let query = get_query(query_option);
+    let nums_int = _nums.unwrap_or(DEFAULT_NUM_ARTICLES);
 
-    let nums_int = _nums.unwrap_or(5);
-    let url = format!("{}{}{}", AJOU_LINK, query, nums_int);
+    let url = [AJOU_LINK, &query, &nums_int.to_string()].concat();
 
-    let res = CLIENT
-        .get(&url)
+    let client = reqwest::Client::builder()
+        .danger_accept_invalid_certs(true)
+        .connect_timeout(Duration::from_secs(5))
+        .build()?;
+
+    // header 없이 보내면 404
+    let res = client
+        .get(url)
         .header(USER_AGENT, MY_USER_AGENT)
         .send()
         .await?;
     let body = res.text().await?;
 
+    // HTML Parse
     let document = Html::parse_document(&body);
     let a_selector = Selector::parse("a").unwrap();
 
@@ -56,78 +69,50 @@ pub async fn notice_parse(
     let dates = Selector::parse("span.b-date").unwrap();
     let writers = Selector::parse("span.b-writer").unwrap();
 
-    let mut notices: Vec<Notice> = vec![];
-
-    let mut id_elements = document.select(&ids);
+    let id_elements = document.select(&ids);
     let mut cate_elements = document.select(&cates);
     let mut title_elements = document.select(&titles);
     let mut date_elements = document.select(&dates);
     let mut writer_elements = document.select(&writers);
 
-    for id_element in &mut id_elements {
-        let id = match id_element.text().next().unwrap().trim().parse::<i32>() {
-            Ok(some) => some,
-            Err(_) => {
-                date_elements.next().unwrap();
-                writer_elements.next().unwrap();
-                cate_elements.next().unwrap();
-                title_elements.next().unwrap();
-                continue;
+    let notices: Vec<Notice> = id_elements
+        .filter_map(|id_element| {
+            let date = date_elements.next()?.text().next()?.trim().to_string();
+            let writer = writer_elements
+                .next()?
+                .text()
+                .next()
+                .unwrap_or("알 수 없음")
+                .trim()
+                .to_string();
+            let category = cate_elements.next()?.text().next()?.trim().to_string();
+            let inner_a = title_elements.next()?.select(&a_selector).next()?;
+            let id = id_element.text().next()?.trim().parse::<i32>().ok()?;
+
+            let mut title = inner_a.value().attr("title")?.to_string();
+            let link = format!("{}{}", AJOU_LINK, inner_a.value().attr("href").unwrap());
+
+            let dup = format!("[{}]", writer);
+            if title.contains(&dup) {
+                title = title.replace(&dup, "");
             }
-        };
 
-        let date = date_elements
-            .next()
-            .unwrap()
-            .text()
-            .next()
-            .unwrap()
-            .trim()
-            .to_string();
-        let writer = writer_elements
-            .next()
-            .unwrap()
-            .text()
-            .next()
-            .unwrap_or("알 수 없음")
-            .trim()
-            .to_string();
-        let category = cate_elements
-            .next()
-            .unwrap()
-            .text()
-            .next()
-            .unwrap()
-            .trim()
-            .to_string();
+            title = title
+                .replace(" 자세히 보기", "")
+                .replace("(재공지)", "")
+                .trim()
+                .to_string();
 
-        let title_element = title_elements.next().unwrap();
-        let inner_a = title_element.select(&a_selector).next().unwrap();
-        let mut title = inner_a.value().attr("title").unwrap().to_string();
-        let link = format!("{}{}", AJOU_LINK, inner_a.value().attr("href").unwrap());
-
-        let dup = format!("[{}]", writer);
-        if title.contains(&dup) {
-            title = title.replace(&dup, "");
-        }
-
-        title = title
-            .replace(" 자세히 보기", "")
-            .replace("(재공지)", "")
-            .trim()
-            .to_string();
-
-        let notice = Notice {
-            id,
-            category,
-            title,
-            link,
-            date,
-            writer,
-        };
-
-        notices.push(notice);
-    }
+            Some(Notice {
+                id,
+                category,
+                title,
+                link,
+                date,
+                writer,
+            })
+        })
+        .collect();
 
     Ok(notices)
 }
@@ -305,10 +290,10 @@ pub async fn people_parse(keyword: &str) -> Result<People, reqwest::Error> {
     Ok(people)
 }
 
-pub async fn meal_parse(date: String) -> Result<Meal, reqwest::Error> {
+pub async fn meal_parse(date: String, res: u8) -> Result<Meal, reqwest::Error> {
     let mut map = HashMap::new();
-    map.insert("categoryId", "63"); // TODO 221: 교직원, 63, 기숙사 식당
-    map.insert("yyyymmdd", &date);
+    map.insert("categoryId", res.to_string()); // 221: 교직원, 63, 기숙사 식당
+    map.insert("yyyymmdd", date);
 
     // header 없이 보내면 404
     let res = CLIENT

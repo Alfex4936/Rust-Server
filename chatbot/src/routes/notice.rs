@@ -1,6 +1,6 @@
 // use crate::db::connection::DbPool;
 
-use crate::routes::DbPool;
+use crate::routes::{DbPool, Kakao};
 
 use crate::db::models::Notice;
 
@@ -51,9 +51,7 @@ pub async fn get_last_notice() -> impl Responder {
         _ => {
             result.add_output(SimpleText::new("홈페이지 반응이 늦습니다. :(").build());
 
-            return HttpResponse::Ok()
-                .content_type("application/json")
-                .body(serde_json::to_string(&result).unwrap());
+            return Kakao { template: result };
         }
     };
 
@@ -86,9 +84,7 @@ pub async fn get_last_notice() -> impl Responder {
 
     result.add_output(list_card.build());
 
-    HttpResponse::Ok()
-        .content_type("application/json")
-        .body(serde_json::to_string(&result).unwrap())
+    Kakao { template: result }
 }
 
 #[post("/today")]
@@ -103,9 +99,7 @@ pub async fn get_today_notice(_: web::Json<Value>) -> impl Responder {
         _ => {
             result.add_output(SimpleText::new("홈페이지 반응이 늦습니다. :(").build());
 
-            return HttpResponse::Ok()
-                .content_type("application/json")
-                .body(serde_json::to_string(&result).unwrap());
+            return Kakao { template: result };
         }
     };
     let today = Local::now().format("%y.%m.%d").to_string(); // "21.07.20"
@@ -178,9 +172,7 @@ pub async fn get_today_notice(_: web::Json<Value>) -> impl Responder {
 
     result.add_output(list_card.build()); // moved list_card's ownership
 
-    HttpResponse::Ok()
-        .content_type("application/json")
-        .body(serde_json::to_string(&result).unwrap())
+    Kakao { template: result }
 }
 
 #[post("/today2")]
@@ -207,9 +199,7 @@ pub async fn get_more_today_notice(_: web::Json<Value>) -> impl Responder {
         result.add_qr(QuickReply::new("오늘 공지", "ㅗ"));
         result.add_output(SimpleText::new("공지가 5개 이하 입니다!").build());
 
-        return HttpResponse::Ok()
-            .content_type("application/json")
-            .body(serde_json::to_string(&result).unwrap());
+        return Kakao { template: result };
     }
 
     let mut carousel = Carousel::new();
@@ -237,9 +227,7 @@ pub async fn get_more_today_notice(_: web::Json<Value>) -> impl Responder {
 
     result.add_output(carousel.build()); // moved list_card's ownership
 
-    HttpResponse::Ok()
-        .content_type("application/json")
-        .body(serde_json::to_string(&result).unwrap())
+    Kakao { template: result }
 }
 
 #[post("/yesterday")]
@@ -306,9 +294,7 @@ pub async fn get_yesterday_notice(conn: web::Data<DbPool>) -> impl Responder {
 
     result.add_output(list_card.build());
 
-    HttpResponse::Ok()
-        .content_type("application/json")
-        .body(serde_json::to_string(&result).unwrap())
+    Kakao { template: result }
 }
 
 #[post("/search")]
@@ -322,9 +308,7 @@ pub async fn get_keyword_notice(kakao: web::Json<Value>) -> impl Responder {
             result.add_qr(QuickReply::new("검색", "검색"));
             result.add_output(SimpleText::new("검색어를 다시 입력하세요.").build());
 
-            return HttpResponse::Ok()
-                .content_type("application/json")
-                .body(serde_json::to_string(&result).unwrap());
+            return Kakao { template: result };
         }
     };
 
@@ -335,9 +319,7 @@ pub async fn get_keyword_notice(kakao: web::Json<Value>) -> impl Responder {
         _ => {
             result.add_output(SimpleText::new("홈페이지 반응이 늦습니다. :(").build());
 
-            return HttpResponse::Ok()
-                .content_type("application/json")
-                .body(serde_json::to_string(&result).unwrap());
+            return Kakao { template: result };
         }
     };
 
@@ -345,9 +327,7 @@ pub async fn get_keyword_notice(kakao: web::Json<Value>) -> impl Responder {
     if notices.is_empty() {
         result.add_output(SimpleText::new(format!("{}에 관한 글이 없어요.", keyword)).build());
 
-        return HttpResponse::Ok()
-            .content_type("application/json")
-            .body(serde_json::to_string(&result).unwrap());
+        return Kakao { template: result };
     }
 
     let mut list_card = ListCard::new(format!("{} 결과", keyword));
@@ -393,9 +373,7 @@ pub async fn get_keyword_notice(kakao: web::Json<Value>) -> impl Responder {
         );
     }
     result.add_output(list_card.build());
-    HttpResponse::Ok()
-        .content_type("application/json")
-        .body(serde_json::to_string(&result).unwrap())
+    Kakao { template: result }
 }
 
 #[post("/ask")]
@@ -437,9 +415,7 @@ pub async fn get_category_notice(kakao: web::Json<Value>) -> impl Responder {
             result.add_qr(QuickReply::new("카테", "ㅋㅌ"));
             result.add_output(SimpleText::new("오류가 발생했습니다 :(").build());
 
-            return HttpResponse::Ok()
-                .content_type("application/json")
-                .body(serde_json::to_string(&result).unwrap());
+            return Kakao { template: result };
         }
     };
 
@@ -470,9 +446,7 @@ pub async fn get_category_notice(kakao: web::Json<Value>) -> impl Responder {
             _ => {
                 result.add_output(SimpleText::new("홈페이지 반응이 늦습니다. :(").build());
 
-                return HttpResponse::Ok()
-                    .content_type("application/json")
-                    .body(serde_json::to_string(&result).unwrap());
+                return Kakao { template: result };
             }
         };
 
@@ -511,14 +485,11 @@ pub async fn get_category_notice(kakao: web::Json<Value>) -> impl Responder {
         );
     }
     result.add_output(list_card.build());
-    HttpResponse::Ok()
-        .content_type("application/json")
-        .body(serde_json::to_string(&result).unwrap())
+    Kakao { template: result }
 }
 
 #[get("/{nums}")]
 pub async fn get_notices(nums: web::Path<usize>) -> impl Responder {
-    // println!("{}", kakao["userRequest"]["utterance"].as_str().unwrap()); // 발화문
     let result = notice_parse("ajou", Some(nums.into_inner())).await.unwrap();
     HttpResponse::Ok().json(result)
 }
