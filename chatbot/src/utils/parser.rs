@@ -14,6 +14,7 @@ use scraper::{Html, Selector};
 use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::collections::HashMap;
+use std::collections::HashSet;
 use std::env;
 use std::hash::{Hash, Hasher};
 use std::sync::{Arc, Mutex};
@@ -39,11 +40,7 @@ lazy_static! {
         .build()
         .unwrap();
     static ref INIT: OnceCell<tokio::sync::Mutex<()>> = OnceCell::new();
-    static ref SUB_ENG_NAME_INDEX: Mutex<Arc<BTreeMap<String, Vec<Course>>>> =
-        Mutex::new(Arc::new(BTreeMap::new()));
-    static ref SUB_KOR_NAME_INDEX: Mutex<Arc<BTreeMap<String, Vec<Course>>>> =
-        Mutex::new(Arc::new(BTreeMap::new()));
-    static ref COURSE_PROF_NAME_INDEX: Mutex<Arc<BTreeMap<String, Vec<Course>>>> =
+    static ref GLOBAL_INDEX: Mutex<Arc<BTreeMap<String, Vec<Course>>>> =
         Mutex::new(Arc::new(BTreeMap::new()));
 }
 
@@ -483,52 +480,41 @@ async fn load_csv_data(file_path: &str) -> Result<Vec<Course>> {
 }
 
 fn index_from_courses(courses: &[Course]) {
-    let mut sub_eng_name_index = BTreeMap::new();
-    let mut sub_kor_name_index = BTreeMap::new();
-    let mut course_prof_name_index = BTreeMap::new();
+    let mut index = GLOBAL_INDEX.lock().unwrap();
+    let index_inner = Arc::make_mut(&mut index);
 
     for course in courses {
-        sub_eng_name_index
-            .entry(course.subject_english_name.to_lowercase())
-            .or_insert_with(Vec::new)
-            .push(course.clone());
+        let keys = vec![
+            course.subject_english_name.to_lowercase(),
+            course.subject_korean_name.to_lowercase(),
+            course.main_lecturer_name.to_lowercase(),
+        ];
 
-        sub_kor_name_index
-            .entry(course.subject_korean_name.to_lowercase())
-            .or_insert_with(Vec::new)
-            .push(course.clone());
-
-        course_prof_name_index
-            .entry(course.main_lecturer_name.to_lowercase())
-            .or_insert_with(Vec::new)
-            .push(course.clone());
+        for key in keys {
+            index_inner
+                .entry(key)
+                .or_insert_with(Vec::new)
+                .push(course.clone());
+        }
     }
-
-    *SUB_ENG_NAME_INDEX.lock().unwrap() = Arc::new(sub_eng_name_index);
-    *SUB_KOR_NAME_INDEX.lock().unwrap() = Arc::new(sub_kor_name_index);
-    *COURSE_PROF_NAME_INDEX.lock().unwrap() = Arc::new(course_prof_name_index);
 }
 
 fn search(query: &str) -> Vec<Course> {
     let query = query.to_lowercase();
+    let index = GLOBAL_INDEX.lock().unwrap();
+    let index_clone = Arc::clone(&index);
 
     let mut results: Vec<Course> = Vec::new();
+    let mut added_ids: HashSet<String> = HashSet::new();
 
-    for (key, courses_by_eng_name) in (*SUB_ENG_NAME_INDEX.lock().unwrap()).iter() {
+    for (key, courses_list) in index_clone.iter() {
         if key.contains(&query) {
-            results.extend(courses_by_eng_name.to_owned());
-        }
-    }
-
-    for (key, courses_by_kor_name) in (*SUB_KOR_NAME_INDEX.lock().unwrap()).iter() {
-        if key.contains(&query) {
-            results.extend(courses_by_kor_name.to_owned());
-        }
-    }
-
-    for (key, courses_by_prof_name) in (*COURSE_PROF_NAME_INDEX.lock().unwrap()).iter() {
-        if key.contains(&query) {
-            results.extend(courses_by_prof_name.to_owned());
+            for course in courses_list {
+                if !added_ids.contains(&course.subject_id) {
+                    results.push(course.clone());
+                    added_ids.insert(course.subject_id.clone());
+                }
+            }
         }
     }
 
@@ -539,7 +525,7 @@ pub async fn load_courses(query: &str) -> Result<Vec<Course>> {
     let init_lock = INIT.get_or_init(|| tokio::sync::Mutex::new(()));
     {
         let _guard = init_lock.lock().await;
-        if SUB_ENG_NAME_INDEX.lock().unwrap().is_empty() {
+        if GLOBAL_INDEX.lock().unwrap().is_empty() {
             let exe_path = env::current_exe()?;
             let exe_dir = exe_path.parent().unwrap();
             let csv_path = exe_dir.join("course.csv");
