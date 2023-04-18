@@ -132,183 +132,221 @@ pub struct PeopleList {
 }
 
 // Course
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Default)]
 pub struct VariableList {
     #[serde(rename = "ErrorMsg")]
     error_msg: String,
     #[serde(rename = "ErrorCode")]
     error_code: String,
 }
-
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Default)]
 pub struct Course {
-    #[serde(rename = "tm")]
-    duration: f32,
+    #[serde(rename(deserialize = "tm", serialize = "duration"))]
+    duration: Option<f32>,
 
-    #[serde(rename = "submattFgEngNm")]
+    #[serde(rename(deserialize = "submattFgEngNm", serialize = "course_type"))]
     course_type: Option<String>,
 
-    #[serde(rename = "ltTmEngNm")]
+    #[serde(rename(deserialize = "ltTmEngNm", serialize = "class_time"))]
     class_time: String,
 
-    #[serde(rename = "clssNo")]
+    #[serde(rename(deserialize = "clssNo", serialize = "class_number"))]
     class_number: String,
 
-    #[serde(rename = "rcomShyrCdNm")]
+    #[serde(
+        rename(deserialize = "rcomShyrCdNm", serialize = "recommended_year"),
+        default
+    )]
     recommended_year: Option<String>,
 
-    #[serde(rename = "sustLsnFgNm")]
+    #[serde(rename(deserialize = "sustLsnFgNm", serialize = "course_category"))]
     course_category: String,
 
-    #[serde(rename = "maLecturerEmplNo")]
+    #[serde(rename(
+        deserialize = "maLecturerEmplNo",
+        serialize = "main_lecturer_employee_number"
+    ))]
     main_lecturer_employee_number: String,
 
-    #[serde(rename = "abeekInspPracPntCnt")]
-    abeek_practical_points: f32,
+    #[serde(rename(
+        deserialize = "abeekInspPracPntCnt",
+        serialize = "abeek_practical_points"
+    ))]
+    abeek_practical_points: Option<f32>,
 
-    #[serde(rename = "fileNm")]
+    #[serde(rename(deserialize = "fileNm", serialize = "file_name"), default)]
     file_name: Option<String>,
 
-    #[serde(rename = "maLecturerEmplNm")]
+    #[serde(rename(deserialize = "maLecturerEmplNm", serialize = "main_lecturer_name"))]
     main_lecturer_name: String,
 
-    #[serde(rename = "sustLsnFgEngNm")]
+    #[serde(rename(deserialize = "sustLsnFgEngNm", serialize = "course_category_english"))]
     course_category_english: String,
 
-    #[serde(rename = "mjCdEngNm")]
+    #[serde(
+        rename(deserialize = "mjCdEngNm", serialize = "major_code_english"),
+        default
+    )]
     major_code_english: Option<String>,
 
-    #[serde(rename = "sustCd")]
+    #[serde(rename(deserialize = "sustCd", serialize = "department_code"))]
     department_code: String,
 
-    #[serde(rename = "planInputYn")]
+    #[serde(rename(deserialize = "planInputYn", serialize = "plan_input_status"))]
     plan_input_status: String,
 
-    #[serde(rename = "filePath")]
+    #[serde(rename(deserialize = "filePath", serialize = "file_path"), default)]
     file_path: Option<String>,
 
-    #[serde(rename = "abeekTheoPntCnt")]
-    abeek_theoretical_points: f32,
+    #[serde(rename(
+        deserialize = "abeekTheoPntCnt",
+        serialize = "abeek_theoretical_points"
+    ))]
+    abeek_theoretical_points: Option<f32>,
 
-    #[serde(rename = "ltRoomEngNm")]
+    #[serde(rename(deserialize = "ltRoomEngNm", serialize = "classroom_english"))]
     classroom_english: String,
 
-    #[serde(rename = "emplNo")]
+    #[serde(rename(deserialize = "emplNo", serialize = "employee_number"))]
     employee_number: String,
 
-    #[serde(rename = "sustCdEngNm")]
+    #[serde(
+        rename(deserialize = "sustCdEngNm", serialize = "department_english"),
+        default
+    )]
     department_english: Option<String>,
 
-    #[serde(rename = "submattFgNm")]
+    #[serde(rename(deserialize = "submattFgNm", serialize = "course_type_korean"))]
     course_type_korean: String,
 
-    #[serde(rename = "sbjtCd")]
+    #[serde(rename(deserialize = "sbjtCd", serialize = "subject_code"))]
     subject_code: String,
 
-    #[serde(rename = "mainOpenLtNo")]
+    #[serde(rename(deserialize = "mainOpenLtNo", serialize = "main_open_course_number"))]
     main_open_course_number: String,
 
-    #[serde(rename = "mjCd")]
+    #[serde(rename(deserialize = "mjCd", serialize = "major_code"))]
     major_code: String,
 
-    #[serde(rename = "mjCdNm")]
+    #[serde(rename(deserialize = "mjCdNm", serialize = "major_name"), default)]
     major_name: Option<String>,
 
-    #[serde(rename = "ltRoomNm")]
+    #[serde(rename(deserialize = "ltRoomNm", serialize = "classroom"))]
     classroom: String,
 
-    #[serde(rename = "abeePnt")]
+    #[serde(rename(deserialize = "abeePnt", serialize = "abee_point"))]
     abee_point: Option<f32>,
 
-    #[serde(rename = "shtmCd")]
+    #[serde(rename(deserialize = "shtmCd", serialize = "semester_code"))]
     semester_code: String,
 
-    #[serde(rename = "maLecturerEmplEngNm")]
+    #[serde(rename(
+        deserialize = "maLecturerEmplEngNm",
+        serialize = "main_lecturer_english_name"
+    ))]
     main_lecturer_english_name: Option<String>,
 
-    #[serde(rename = "sustLsnFg")]
+    #[serde(rename(deserialize = "sustLsnFg", serialize = "course_category_code"))]
     course_category_code: String,
 
-    #[serde(rename = "openLtNo")]
+    #[serde(rename(deserialize = "openLtNo", serialize = "open_course_number"))]
     open_course_number: String,
 
-    #[serde(rename = "orgLangLtYn")]
+    #[serde(rename(deserialize = "orgLangLtYn", serialize = "original_language_course"))]
     original_language_course: Option<String>,
 
-    #[serde(rename = "cqiYn")]
+    #[serde(rename(deserialize = "cqiYn", serialize = "cqi_status"))]
     cqi_status: String,
 
-    #[serde(rename = "lsnApprDetailPop")]
+    #[serde(rename(deserialize = "lsnApprDetailPop", serialize = "course_evaluation"))]
     course_evaluation: String,
 
-    #[serde(rename = "shtmNm")]
+    #[serde(rename(deserialize = "shtmNm", serialize = "semester_name"))]
     semester_name: String,
 
-    #[serde(rename = "yy")]
+    #[serde(rename(deserialize = "yy", serialize = "year"))]
     year: String,
 
-    #[serde(rename = "sustCdNm")]
+    #[serde(rename(deserialize = "sustCdNm", serialize = "department_name"))]
     department_name: Option<String>,
 
-    #[serde(rename = "engGrdFgNm")]
+    #[serde(
+        rename(deserialize = "engGrdFgNm", serialize = "english_grade_type"),
+        default
+    )]
     english_grade_type: Option<String>,
 
-    #[serde(rename = "abeekDgnPntCnt")]
-    abeek_design_points: f32,
+    #[serde(rename(deserialize = "abeekDgnPntCnt", serialize = "abeek_design_points"))]
+    abeek_design_points: Option<f32>,
 
-    #[serde(rename = "abeekYn")]
+    #[serde(rename(deserialize = "abeekYn", serialize = "abeek_status"))]
     abeek_status: String,
 
-    #[serde(rename = "fileFg")]
+    #[serde(rename(deserialize = "fileFg", serialize = "file_status"))]
     file_status: String,
 
-    #[serde(rename = "sbjtKorNm")]
+    #[serde(rename(deserialize = "sbjtKorNm", serialize = "subject_korean_name"))]
     subject_korean_name: String,
 
-    #[serde(rename = "lsnPdocMngtClssYn")]
+    #[serde(
+        rename(
+            deserialize = "lsnPdocMngtClssYn",
+            serialize = "lesson_document_management_class"
+        ),
+        default
+    )]
     lesson_document_management_class: Option<String>,
 
-    #[serde(rename = "ltTmNm")]
+    #[serde(rename(deserialize = "ltTmNm", serialize = "class_time_korean"))]
     class_time_korean: String,
 
-    #[serde(rename = "rcomShyrCd")]
+    #[serde(
+        rename(deserialize = "rcomShyrCd", serialize = "recommended_year_code"),
+        default
+    )]
     recommended_year_code: Option<String>,
 
-    #[serde(rename = "tlsnNo")]
+    #[serde(rename(deserialize = "tlsnNo", serialize = "lesson_number"))]
     lesson_number: String,
 
-    #[serde(rename = "apprUnAdptYn")]
+    #[serde(rename(deserialize = "apprUnAdptYn", serialize = "approved_unadapted"))]
     approved_unadapted: String,
 
-    #[serde(rename = "pnt")]
+    #[serde(rename(deserialize = "pnt", serialize = "credit_points"))]
     credit_points: f32,
 
-    #[serde(rename = "sbjtId")]
-    subject_id: String,
+    #[serde(rename(deserialize = "sbjtId", serialize = "subject_id"))]
+    pub subject_id: String,
 
-    #[serde(rename = "sbjtEngNm")]
+    #[serde(rename(deserialize = "sbjtEngNm", serialize = "subject_english_name"))]
     subject_english_name: String,
 
-    #[serde(rename = "coopOpenLtYn")]
+    #[serde(rename(deserialize = "coopOpenLtYn", serialize = "cooperative_open_course"))]
     cooperative_open_course: String,
 
-    #[serde(rename = "coopLt")]
+    #[serde(
+        rename(deserialize = "coopLt", serialize = "cooperative_course"),
+        default
+    )]
     cooperative_course: Option<String>,
 
-    #[serde(rename = "rowStatus")]
+    #[serde(rename(deserialize = "rowStatus", serialize = "row_status"))]
     row_status: i32,
 
-    #[serde(rename = "ltFgNm")]
+    #[serde(
+        rename(deserialize = "ltFgNm", serialize = "lecture_type_name"),
+        default
+    )]
     lecture_type_name: Option<String>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Default)]
 pub struct DatasetList {
     #[serde(rename = "DS_COUR120")]
     pub ds_cour120: Vec<Course>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Default)]
 
 pub struct CourseResp {
     #[serde(rename = "VariableList")]

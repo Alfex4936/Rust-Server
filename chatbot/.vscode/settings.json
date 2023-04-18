@@ -6,5 +6,7 @@
   "python.linting.pylintEnabled": false,
   "python.linting.mypyEnabled": true,
   "python.linting.enabled": true,
-  "rust-analyzer.linkedProjects": ["\\Cargo.toml"]
+  "rust-analyzer.linkedProjects": [
+    "D:\\Dev\\Rust\\ajou_kakao\\chatbot\\Cargo.toml"
+  ]
 }

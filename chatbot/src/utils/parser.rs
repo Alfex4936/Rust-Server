@@ -1,11 +1,25 @@
 use crate::db::models::{CourseResp, Library, Meal, Notice, People, Weather};
-use crate::MY_USER_AGENT;
+use crate::{MONGO_URL, MY_USER_AGENT};
+use anyhow::{anyhow, Result};
+use csv::ReaderBuilder;
 use lazy_static::lazy_static;
+use mongodb::{
+    bson::{doc, to_bson},
+    options::{ClientOptions, UpdateOptions},
+    Client,
+};
+use once_cell::sync::OnceCell;
 use reqwest::header::{HeaderMap, HeaderValue, CONTENT_TYPE, COOKIE, USER_AGENT};
 use scraper::{Html, Selector};
 use std::borrow::Cow;
+use std::collections::BTreeMap;
 use std::collections::HashMap;
+use std::env;
+use std::hash::{Hash, Hasher};
+use std::sync::{Arc, Mutex};
 use std::time::Duration;
+use tokio::fs::File;
+use tokio::io::AsyncReadExt;
 
 pub const AJOU_LINK: &str = "https://www.ajou.ac.kr/kr/ajou/notice.do";
 pub const NAVER_WEATHER: &str = "https://m.search.naver.com/search.naver?sm=tab_hty.top&where=nexearch&query=%EB%82%A0%EC%94%A8+%EB%A7%A4%ED%83%843%EB%8F%99&oquery=%EB%82%A0%EC%94%A8"; // 아주대 지역 날씨
@@ -13,7 +27,7 @@ pub const NAVER_WEATHER_ICON: &str = "https://weather.naver.com/today/02117530?c
 pub const AJOU_LIBRARY: &str = env!("AJOU_LIBRARY"); // 아주대 중앙 도서관
 pub const AJOU_PEOPLE: &str = env!("AJOU_PEOPLE"); // 아주대 인물 검색
 pub const AJOU_MEAL: &str = env!("AJOU_MEAL"); // 아주대 학식
-pub const AJOU_COURSE: &str = "https://mhaksa.ajou.ac.kr:30443/nt/cvt.do"; // 아주대 학식
+pub const AJOU_COURSE: &str = env!("AJOU_COURSE");
 const DEFAULT_NUM_ARTICLES: usize = 7;
 
 lazy_static! {
@@ -24,6 +38,13 @@ lazy_static! {
         .user_agent(MY_USER_AGENT)
         .build()
         .unwrap();
+    static ref INIT: OnceCell<tokio::sync::Mutex<()>> = OnceCell::new();
+    static ref SUB_ENG_NAME_INDEX: Mutex<Arc<BTreeMap<String, Vec<Course>>>> =
+        Mutex::new(Arc::new(BTreeMap::new()));
+    static ref SUB_KOR_NAME_INDEX: Mutex<Arc<BTreeMap<String, Vec<Course>>>> =
+        Mutex::new(Arc::new(BTreeMap::new()));
+    static ref COURSE_PROF_NAME_INDEX: Mutex<Arc<BTreeMap<String, Vec<Course>>>> =
+        Mutex::new(Arc::new(BTreeMap::new()));
 }
 
 fn get_query(query_option: &str) -> Cow<'_, str> {
@@ -237,24 +258,6 @@ pub async fn weather_parse() -> Result<Weather, reqwest::Error> {
         uv,
         icon,
     };
-    // let mut weather: Weather = Default::default();
-    // weather.current_temp = current_temp;
-    // weather.min_temp = min_temp;
-    // weather.max_temp = max_temp;
-    // weather.current_status = current_status;
-    // weather.sunset = sunset;
-    // weather.rain_day = rain_day;
-    // weather.rain_night = rain_night;
-    // weather.fine_dust = fine_dust;
-    // weather.ultra_dust = ultra_dust;
-    // weather.uv = uv;
-    // // weather.windchill = windchill;  // 체감온도 추가됨 (2022.05.04)
-    // weather.icon = format!(
-    //     "https://raw.githubusercontent.com/Alfex4936/KakaoChatBot-Golang/main/imgs/{}.png?raw=true",
-    //     icon
-    // );
-
-    // println!("{:?}", weather);
     Ok(weather)
 }
 
@@ -337,6 +340,221 @@ pub async fn meal_parse(date: String, res: u8) -> Result<Meal, reqwest::Error> {
     Ok(meal)
 }
 
+#[derive(Debug, Serialize, Deserialize, Default, Clone)]
+pub struct Course {
+    duration: Option<f32>,
+
+    course_type: Option<String>,
+
+    class_time: String,
+
+    class_number: String,
+
+    recommended_year: Option<String>,
+
+    course_category: String,
+
+    main_lecturer_employee_number: String,
+
+    abeek_practical_points: f32,
+
+    file_name: Option<String>,
+
+    pub main_lecturer_name: String,
+
+    course_category_english: String,
+
+    major_code_english: Option<String>,
+
+    department_code: String,
+
+    plan_input_status: String,
+
+    file_path: Option<String>,
+
+    abeek_theoretical_points: f32,
+
+    classroom_english: String,
+
+    employee_number: String,
+
+    department_english: Option<String>,
+
+    course_type_korean: String,
+
+    subject_code: String,
+
+    main_open_course_number: String,
+
+    major_code: String,
+
+    major_name: Option<String>,
+
+    classroom: String,
+
+    abee_point: Option<f32>,
+
+    semester_code: String,
+
+    main_lecturer_english_name: Option<String>,
+
+    course_category_code: String,
+
+    open_course_number: String,
+
+    original_language_course: Option<String>,
+
+    cqi_status: String,
+
+    course_evaluation: String,
+
+    semester_name: String,
+
+    year: String,
+
+    department_name: Option<String>,
+
+    english_grade_type: Option<String>,
+
+    abeek_design_points: Option<f32>,
+
+    abeek_status: String,
+
+    file_status: String,
+
+    pub subject_korean_name: String,
+
+    lesson_document_management_class: Option<String>,
+
+    pub class_time_korean: String,
+
+    recommended_year_code: Option<String>,
+
+    lesson_number: String,
+
+    approved_unadapted: String,
+
+    credit_points: Option<f32>,
+
+    pub subject_id: String,
+
+    pub subject_english_name: String,
+
+    cooperative_open_course: String,
+
+    cooperative_course: Option<String>,
+
+    row_status: i32,
+
+    lecture_type_name: Option<String>,
+}
+
+impl PartialEq for Course {
+    fn eq(&self, other: &Self) -> bool {
+        self.subject_id.eq(&other.subject_id)
+    }
+}
+
+impl Eq for Course {}
+
+impl Hash for Course {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.subject_id.hash(state);
+    }
+}
+
+async fn load_csv_data(file_path: &str) -> Result<Vec<Course>> {
+    let mut buf = Vec::new();
+    let mut file = File::open(file_path).await?;
+    file.read_to_end(&mut buf).await?;
+
+    let mut reader = ReaderBuilder::new()
+        .delimiter(b',')
+        .flexible(true)
+        .from_reader(buf.as_slice());
+
+    let mut courses: Vec<Course> = vec![];
+    for result in reader.deserialize() {
+        let record: Course = result?;
+        courses.push(record);
+    }
+
+    Ok(courses)
+}
+
+fn index_from_courses(courses: &[Course]) {
+    let mut sub_eng_name_index = BTreeMap::new();
+    let mut sub_kor_name_index = BTreeMap::new();
+    let mut course_prof_name_index = BTreeMap::new();
+
+    for course in courses {
+        sub_eng_name_index
+            .entry(course.subject_english_name.to_lowercase())
+            .or_insert_with(Vec::new)
+            .push(course.clone());
+
+        sub_kor_name_index
+            .entry(course.subject_korean_name.to_lowercase())
+            .or_insert_with(Vec::new)
+            .push(course.clone());
+
+        course_prof_name_index
+            .entry(course.main_lecturer_name.to_lowercase())
+            .or_insert_with(Vec::new)
+            .push(course.clone());
+    }
+
+    *SUB_ENG_NAME_INDEX.lock().unwrap() = Arc::new(sub_eng_name_index);
+    *SUB_KOR_NAME_INDEX.lock().unwrap() = Arc::new(sub_kor_name_index);
+    *COURSE_PROF_NAME_INDEX.lock().unwrap() = Arc::new(course_prof_name_index);
+}
+
+fn search(query: &str) -> Vec<Course> {
+    let query = query.to_lowercase();
+
+    let mut results: Vec<Course> = Vec::new();
+
+    for (key, courses_by_eng_name) in (*SUB_ENG_NAME_INDEX.lock().unwrap()).iter() {
+        if key.contains(&query) {
+            results.extend(courses_by_eng_name.to_owned());
+        }
+    }
+
+    for (key, courses_by_kor_name) in (*SUB_KOR_NAME_INDEX.lock().unwrap()).iter() {
+        if key.contains(&query) {
+            results.extend(courses_by_kor_name.to_owned());
+        }
+    }
+
+    for (key, courses_by_prof_name) in (*COURSE_PROF_NAME_INDEX.lock().unwrap()).iter() {
+        if key.contains(&query) {
+            results.extend(courses_by_prof_name.to_owned());
+        }
+    }
+
+    results
+}
+
+pub async fn load_courses(query: &str) -> Result<Vec<Course>> {
+    let init_lock = INIT.get_or_init(|| tokio::sync::Mutex::new(()));
+    {
+        let _guard = init_lock.lock().await;
+        if SUB_ENG_NAME_INDEX.lock().unwrap().is_empty() {
+            let exe_path = env::current_exe()?;
+            let exe_dir = exe_path.parent().unwrap();
+            let csv_path = exe_dir.join("course.csv");
+            let csv_path_str = csv_path.to_str().unwrap();
+
+            let courses = load_csv_data(csv_path_str).await?;
+            index_from_courses(&courses);
+        }
+    }
+
+    let mut matching_courses = search(query);
+    matching_courses.truncate(10);
+    Ok(matching_courses)
+}
+
 pub async fn course_parse(str_submatt_fg: &str) -> Result<CourseResp, reqwest::Error> {
     let payload = serde_json::json!({
         "url": "uni/uni/cour/lssn/findCourLecturePlanDocumentReg.action",
@@ -355,7 +573,7 @@ pub async fn course_parse(str_submatt_fg: &str) -> Result<CourseResp, reqwest::E
     let mut headers = HeaderMap::new();
     headers.insert(USER_AGENT, HeaderValue::from_static("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36"));
     headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
-    headers.insert(COOKIE, HeaderValue::from_static("JSESSIONID=Gxs59IKpcuWW2aY0cbCkFUngFbkJfOYfaSYg1F5dQgYaFAF1xJBTckVhiEsJcZfR.chusa_servlet_HAKSA01;"));
+    headers.insert(COOKIE, HeaderValue::from_static(""));
 
     let res = CLIENT
         .post(AJOU_COURSE)
@@ -368,4 +586,46 @@ pub async fn course_parse(str_submatt_fg: &str) -> Result<CourseResp, reqwest::E
 
     let courses: CourseResp = serde_json::from_str(&body).unwrap();
     Ok(courses)
+}
+
+fn get_collection_name(category: &str) -> String {
+    format!("course_2023-1_{}", category)
+}
+
+pub async fn insert_courses_to_mongodb(category: &str, courses: Vec<Course>) -> Result<()> {
+    let client_options = ClientOptions::parse(MONGO_URL).await?;
+    let client = Client::with_options(client_options)?;
+
+    let database_name = "ajou";
+    let collection_name = get_collection_name(category);
+    println!(
+        "Inserting courses for {collection_name} (len: {})...",
+        courses.len()
+    );
+
+    let db = client.database(database_name);
+    let collection = db.collection::<Course>(&collection_name);
+
+    for course in courses {
+        // Assuming 'subject_code' is unique for each course
+        let filter = doc! { "subject_code": &course.subject_id };
+
+        let document = to_bson(&course)?
+            .as_document()
+            .ok_or_else(|| anyhow!("Error converting course to BSON document"))?
+            .clone();
+
+        let update = doc! { "$set": document };
+        let options = UpdateOptions::builder().upsert(true).build();
+
+        collection
+            .update_one(filter, update, options)
+            .await
+            .map_err(|e| anyhow!("Error upserting course in MongoDB: {:?}", e))?;
+
+        // println!("Updated documents: {:?}", result.upserted_id);
+    }
+
+    println!("Finished updating courses...");
+    Ok(())
 }

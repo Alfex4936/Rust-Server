@@ -1,7 +1,9 @@
 // use crate::db::connection::DbPool;
 use crate::db::query;
 use crate::routes::DbPool;
-use crate::utils::parser::{library_parse, meal_parse, people_parse, weather_parse, NAVER_WEATHER};
+use crate::utils::parser::{
+    library_parse, load_courses, meal_parse, people_parse, weather_parse, NAVER_WEATHER,
+};
 use crate::CARD_IMAGES;
 
 use crate::routes::Kakao;
@@ -216,6 +218,33 @@ pub async fn get_meal_today() -> impl Responder {
     Kakao { template: result }
 }
 
+#[post("/course")]
+pub async fn get_courses(kakao: web::Json<Value>) -> impl Responder {
+    let mut keyword = kakao["action"]["params"]["course"]
+        .as_str()
+        .unwrap()
+        .to_string();
+    keyword.retain(|c| !c.is_whitespace());
+
+    let mut result = Template::new();
+    let mut carousel = Carousel::new().set_type(BasicCard::id());
+
+    for course in load_courses(&keyword).await.unwrap() {
+        let basic_card = BasicCard::new()
+            .set_title(course.subject_korean_name)
+            .set_desc(format!(
+                "{} (장소: {})",
+                course.main_lecturer_name, course.class_time_korean
+            ));
+
+        carousel.add_card(basic_card.build_card());
+    }
+
+    result.add_output(carousel.build());
+
+    Kakao { template: result }
+}
+
 pub fn init_info(cfg: &mut web::ServiceConfig) {
     cfg.service(get_weather);
     cfg.service(get_schedule);
@@ -223,4 +252,5 @@ pub fn init_info(cfg: &mut web::ServiceConfig) {
     cfg.service(get_library);
     cfg.service(get_map);
     cfg.service(get_meal_today);
+    cfg.service(get_courses);
 }
