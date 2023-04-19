@@ -229,15 +229,25 @@ pub async fn get_courses(kakao: web::Json<Value>) -> impl Responder {
     let mut result = Template::new();
     let mut carousel = Carousel::new().set_type(BasicCard::id());
 
-    for course in load_courses(&keyword).await.unwrap() {
+    let courses = load_courses(&keyword).await.unwrap();
+
+    if courses.is_empty() {
         let basic_card = BasicCard::new()
-            .set_title(course.subject_korean_name)
-            .set_desc(format!(
-                "{} (장소: {})",
-                course.main_lecturer_name, course.class_time_korean
-            ));
+            .set_title("검색 결과 없음")
+            .set_desc("다른 검색어를 시도하세요");
 
         carousel.add_card(basic_card.build_card());
+    } else {
+        for course in courses {
+            let basic_card = BasicCard::new()
+                .set_title(course.subject_korean_name)
+                .set_desc(format!(
+                    "{} (장소: {})",
+                    course.main_lecturer_name, course.class_time_korean
+                ));
+
+            carousel.add_card(basic_card.build_card());
+        }
     }
 
     result.add_output(carousel.build());

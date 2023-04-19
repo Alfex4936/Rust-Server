@@ -1,6 +1,8 @@
 use crate::db::models::{CourseResp, Library, Meal, Notice, People, Weather};
 use crate::{MONGO_URL, MY_USER_AGENT};
 use anyhow::{anyhow, Result};
+use cached::proc_macro::cached;
+use cached::SizedCache;
 use csv::ReaderBuilder;
 use lazy_static::lazy_static;
 use mongodb::{
@@ -17,10 +19,11 @@ use std::collections::HashMap;
 use std::collections::HashSet;
 use std::env;
 use std::hash::{Hash, Hasher};
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use std::time::Duration;
 use tokio::fs::File;
 use tokio::io::AsyncReadExt;
+use tokio::sync::Mutex;
 
 pub const AJOU_LINK: &str = "https://www.ajou.ac.kr/kr/ajou/notice.do";
 pub const NAVER_WEATHER: &str = "https://m.search.naver.com/search.naver?sm=tab_hty.top&where=nexearch&query=%EB%82%A0%EC%94%A8+%EB%A7%A4%ED%83%843%EB%8F%99&oquery=%EB%82%A0%EC%94%A8"; // 아주대 지역 날씨
@@ -39,7 +42,7 @@ lazy_static! {
         .user_agent(MY_USER_AGENT)
         .build()
         .unwrap();
-    static ref INIT: OnceCell<tokio::sync::Mutex<()>> = OnceCell::new();
+    static ref INIT: OnceCell<Mutex<()>> = OnceCell::new();
     static ref GLOBAL_INDEX: Mutex<Arc<BTreeMap<String, Vec<Course>>>> =
         Mutex::new(Arc::new(BTreeMap::new()));
 }
@@ -444,11 +447,13 @@ pub struct Course {
     row_status: i32,
 
     lecture_type_name: Option<String>,
+
+    pub unique_id: String,
 }
 
 impl PartialEq for Course {
     fn eq(&self, other: &Self) -> bool {
-        self.subject_id.eq(&other.subject_id)
+        self.unique_id.eq(&other.unique_id)
     }
 }
 
@@ -456,7 +461,7 @@ impl Eq for Course {}
 
 impl Hash for Course {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        self.subject_id.hash(state);
+        self.unique_id.hash(state);
     }
 }
 
@@ -479,14 +484,19 @@ async fn load_csv_data(file_path: &str) -> Result<Vec<Course>> {
     Ok(courses)
 }
 
-fn index_from_courses(courses: &[Course]) {
-    let mut index = GLOBAL_INDEX.lock().unwrap();
+async fn index_from_courses(courses: &[Course]) {
+    let mut index = GLOBAL_INDEX.lock().await;
     let index_inner = Arc::make_mut(&mut index);
+    let mut added_ids: HashSet<String> = HashSet::new();
 
     for course in courses {
+        if added_ids.contains(&course.subject_id) {
+            continue;
+        }
+
         let keys = vec![
-            course.subject_english_name.to_lowercase(),
             course.subject_korean_name.to_lowercase(),
+            course.subject_english_name.to_lowercase(),
             course.main_lecturer_name.to_lowercase(),
         ];
 
@@ -496,24 +506,33 @@ fn index_from_courses(courses: &[Course]) {
                 .or_insert_with(Vec::new)
                 .push(course.clone());
         }
+
+        added_ids.insert(course.unique_id.clone());
     }
 }
 
-fn search(query: &str) -> Vec<Course> {
+#[cached(
+    type = "SizedCache<String, Vec<Course>>",
+    create = "{ SizedCache::with_size(100) }",
+    convert = r#"{ query.to_lowercase() }"#
+)]
+async fn search(query: &str) -> Vec<Course> {
     let query = query.to_lowercase();
-    let index = GLOBAL_INDEX.lock().unwrap();
+    let index = GLOBAL_INDEX.lock().await;
     let index_clone = Arc::clone(&index);
 
     let mut results: Vec<Course> = Vec::new();
     let mut added_ids: HashSet<String> = HashSet::new();
 
-    for (key, courses_list) in index_clone.iter() {
-        if key.contains(&query) {
-            for course in courses_list {
-                if !added_ids.contains(&course.subject_id) {
-                    results.push(course.clone());
-                    added_ids.insert(course.subject_id.clone());
-                }
+    for courses_list in index_clone.values() {
+        for course in courses_list {
+            if !added_ids.contains(&course.unique_id)
+                && (course.subject_korean_name.to_lowercase().contains(&query)
+                    || course.subject_english_name.to_lowercase().contains(&query)
+                    || course.main_lecturer_name.to_lowercase().contains(&query))
+            {
+                results.push(course.clone());
+                added_ids.insert(course.unique_id.clone());
             }
         }
     }
@@ -522,21 +541,23 @@ fn search(query: &str) -> Vec<Course> {
 }
 
 pub async fn load_courses(query: &str) -> Result<Vec<Course>> {
-    let init_lock = INIT.get_or_init(|| tokio::sync::Mutex::new(()));
+    let init_lock = INIT.get_or_init(|| Mutex::new(()));
     {
         let _guard = init_lock.lock().await;
-        if GLOBAL_INDEX.lock().unwrap().is_empty() {
+        if GLOBAL_INDEX.lock().await.is_empty() {
             let exe_path = env::current_exe()?;
             let exe_dir = exe_path.parent().unwrap();
             let csv_path = exe_dir.join("course.csv");
             let csv_path_str = csv_path.to_str().unwrap();
 
             let courses = load_csv_data(csv_path_str).await?;
-            index_from_courses(&courses);
+            index_from_courses(&courses).await;
+
+            // println!("{:?}", GLOBAL_INDEX.lock().await);
         }
     }
 
-    let mut matching_courses = search(query);
+    let mut matching_courses = search(query).await;
     matching_courses.truncate(10);
     Ok(matching_courses)
 }
