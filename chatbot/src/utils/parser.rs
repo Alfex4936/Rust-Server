@@ -11,6 +11,7 @@ use mongodb::{
     Client,
 };
 use once_cell::sync::OnceCell;
+use regex::Regex;
 use reqwest::header::{HeaderMap, HeaderValue, CONTENT_TYPE, COOKIE, USER_AGENT};
 use scraper::{Html, Selector};
 use std::borrow::Cow;
@@ -27,7 +28,6 @@ use tokio::sync::Mutex;
 
 pub const AJOU_LINK: &str = "https://www.ajou.ac.kr/kr/ajou/notice.do";
 pub const NAVER_WEATHER: &str = "https://m.search.naver.com/search.naver?sm=tab_hty.top&where=nexearch&query=%EB%82%A0%EC%94%A8+%EB%A7%A4%ED%83%843%EB%8F%99&oquery=%EB%82%A0%EC%94%A8"; // 아주대 지역 날씨
-pub const NAVER_WEATHER_ICON: &str = "https://weather.naver.com/today/02117530?cpName=ACCUWEATHER"; // 아주대 지역 날씨는
 pub const AJOU_LIBRARY: &str = env!("AJOU_LIBRARY"); // 아주대 중앙 도서관
 pub const AJOU_PEOPLE: &str = env!("AJOU_PEOPLE"); // 아주대 인물 검색
 pub const AJOU_MEAL: &str = env!("AJOU_MEAL"); // 아주대 학식
@@ -45,6 +45,7 @@ lazy_static! {
     static ref INIT: OnceCell<Mutex<()>> = OnceCell::new();
     static ref GLOBAL_INDEX: Mutex<Arc<BTreeMap<String, Vec<Course>>>> =
         Mutex::new(Arc::new(BTreeMap::new()));
+    static ref ICON_REGEX: Regex = Regex::new(r"ico_([a-zA-Z0-9]+)").unwrap();
 }
 
 fn get_query(query_option: &str) -> Cow<'_, str> {
@@ -66,15 +67,10 @@ pub async fn notice_parse(
     let query = get_query(query_option);
     let nums_int = _nums.unwrap_or(DEFAULT_NUM_ARTICLES);
 
-    let url = [AJOU_LINK, &query, &nums_int.to_string()].concat();
-
-    let client = reqwest::Client::builder()
-        .danger_accept_invalid_certs(true)
-        .connect_timeout(Duration::from_secs(5))
-        .build()?;
+    let url = format!("{}{}{}", AJOU_LINK, query, nums_int);
 
     // header 없이 보내면 404
-    let res = client
+    let res = CLIENT
         .get(url)
         .header(USER_AGENT, MY_USER_AGENT)
         .send()
@@ -141,16 +137,11 @@ pub async fn notice_parse(
 
 pub async fn weather_parse() -> Result<Weather, reqwest::Error> {
     let res = CLIENT.get(NAVER_WEATHER).send().await?;
-    let res2 = CLIENT.get(NAVER_WEATHER_ICON).send().await?;
 
     let body = res.text().await?;
-    let body2 = res2.text().await?;
-
-    // println!("Body:\n{}", body);
 
     // HTML Parse
     let document = Html::parse_document(&body);
-    let document2 = Html::parse_document(&body2);
 
     // 현재 온도
     let current_temp = Selector::parse("div.temperature_text").unwrap();
@@ -228,19 +219,30 @@ pub async fn weather_parse() -> Result<Weather, reqwest::Error> {
         .trim()
         .to_string(); // 매우높음
 
-    // 날씨 아이콘
-    let icon = Selector::parse("div.summary_img > i").unwrap();
-    let icon_element = document2.select(&icon).next().unwrap();
-    let mut icon = icon_element.value().attr("data-ico").unwrap().to_string();
-    let icon_classes = icon_element.value().attr("class").unwrap();
+    // 날씨 아이콘1
+    let icon_selector = Selector::parse("div.weather_graphic > div.weather_main > i").unwrap();
+    let icon_element = document.select(&icon_selector).next().unwrap();
+
+    let icon_classes = icon_element.value().attr("class").unwrap_or("");
+
+    // Regular expression to extract value after "ico_"
+    let ico_value = ICON_REGEX
+        .captures(icon_classes)
+        .and_then(|cap| cap.get(1))
+        .map(|m| m.as_str())
+        .unwrap_or("w1");
+
+    let mut icon = ico_value.to_string();
     if icon_classes.contains("night") {
         icon += "_night";
     }
 
     icon = format!(
-        "https://raw.githubusercontent.com/Alfex4936/KakaoChatBot-Golang/main/imgs/{}.png?raw=true",
+        "https://raw.githubusercontent.com/Alfex4936/KakaoChatBot-Golang/main/imgs/ico_animation_{}.png?raw=true",
         icon
     );
+
+    // println!("Icon URL: {}", icon);
 
     // struct Weather init
     let weather = Weather {
@@ -490,7 +492,7 @@ async fn index_from_courses(courses: &[Course]) {
     let mut added_ids: HashSet<String> = HashSet::new();
 
     for course in courses {
-        if added_ids.contains(&course.subject_id) {
+        if added_ids.contains(&course.unique_id) {
             continue;
         }
 
@@ -498,6 +500,7 @@ async fn index_from_courses(courses: &[Course]) {
             course.subject_korean_name.to_lowercase(),
             course.subject_english_name.to_lowercase(),
             course.main_lecturer_name.to_lowercase(),
+            course.classroom.to_lowercase(),
         ];
 
         for key in keys {
@@ -529,7 +532,8 @@ async fn search(query: &str) -> Vec<Course> {
             if !added_ids.contains(&course.unique_id)
                 && (course.subject_korean_name.to_lowercase().contains(&query)
                     || course.subject_english_name.to_lowercase().contains(&query)
-                    || course.main_lecturer_name.to_lowercase().contains(&query))
+                    || course.main_lecturer_name.to_lowercase().contains(&query)
+                    || course.classroom.to_lowercase().contains(&query))
             {
                 results.push(course.clone());
                 added_ids.insert(course.unique_id.clone());

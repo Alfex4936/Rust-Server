@@ -18,6 +18,8 @@ use serde_json::Value;
 
 use std::collections::HashMap;
 
+const DEFAULT_NUM_ARTICLES: usize = 30;
+
 lazy_static! {
     static ref CATEGORIES: HashMap<&'static str, u32> = {
         let mut m = HashMap::new();
@@ -60,15 +62,6 @@ pub async fn get_last_notice() -> impl Responder {
     let mut list_card = ListCard::new(format!("{} 공지", notice.date));
     list_card.add_button(Button::new(ButtonType::Share).set_label("공유하기"));
 
-    // if notice.title.graphemes(true).count() > 35 {
-    //     notice.title = UnicodeSegmentation::grapheme_indices(notice.title.as_str(), true)
-    //         .enumerate()
-    //         .filter(|&(i, _)| i < 32)
-    //         .map(|(_, (_, s))| s)
-    //         .collect::<Vec<&str>>()
-    //         .join("")
-    //         + "...";
-    // }
     let description = format!(
         "[{}] {} {}",
         notice.category,
@@ -94,7 +87,7 @@ pub async fn get_today_notice(_: web::Json<Value>) -> impl Responder {
     result.add_qr(QuickReply::new("오늘", "오늘 공지 보여줘"));
     result.add_qr(QuickReply::new("어제", "어제 공지 보여줘"));
 
-    let mut notices: Vec<Notice> = match notice_parse("ajou", Some(30)).await {
+    let mut notices: Vec<Notice> = match notice_parse("ajou", Some(DEFAULT_NUM_ARTICLES)).await {
         Ok(yes) => yes,
         _ => {
             result.add_output(SimpleText::new("홈페이지 반응이 늦습니다. :(").build());
@@ -106,16 +99,7 @@ pub async fn get_today_notice(_: web::Json<Value>) -> impl Responder {
 
     let mut list_card = ListCard::new(format!("{}) 오늘 공지", today));
 
-    // notices.iter().position(|&n| n.date.ne(&today)).unwrap();
-
     notices.retain(|notice| notice.date.eq(&today));
-
-    // notices = notices
-    //     .into_iter()
-    //     .filter(|notice| notice.date.eq(&today))
-    //     .collect();
-
-    // let length = notices.len();
 
     if !notices.is_empty() {
         result.add_output(SimpleText::new(format!("오늘 공지 총 {}개", notices.len())).build());
@@ -142,17 +126,8 @@ pub async fn get_today_notice(_: web::Json<Value>) -> impl Responder {
             "http://k.kakaocdn.net/dn/APR96/btqqH7zLanY/kD5mIPX7TdD2NAxgP29cC0/1x1.jpg",
         ));
     } else {
-        list_card.add_button(Button::new(ButtonType::Share).set_label("공유하기"));
+        list_card.add_button(Button::share("공유하기"));
         for notice in notices.iter_mut() {
-            // if notice.title.graphemes(true).count() > 35 {
-            //     notice.title = UnicodeSegmentation::grapheme_indices(notice.title.as_str(), true)
-            //         .enumerate()
-            //         .filter(|&(i, _)| i < 32)
-            //         .map(|(_, (_, s))| s)
-            //         .collect::<Vec<&str>>()
-            //         .join("")
-            //         + "...";
-            // }
             let description = format!(
                 "[{}] {} {}",
                 notice.category,
@@ -161,15 +136,12 @@ pub async fn get_today_notice(_: web::Json<Value>) -> impl Responder {
             );
 
             list_card.add_item(
-                ListItem::new((*notice.title).to_string())
+                ListItem::new(&notice.title)
                     .set_desc(description)
-                    .set_link((*notice.link).to_string()),
+                    .set_link(&notice.link),
             );
         }
     }
-
-    // list_card.add_item(ListItem::new("제목".to_string()).set_desc("설명".to_string()));
-
     result.add_output(list_card.build()); // moved list_card's ownership
 
     Kakao { template: result }
@@ -256,27 +228,14 @@ pub async fn get_yesterday_notice(conn: web::Data<DbPool>) -> impl Responder {
     } else {
         label = "아주대 공지".to_string();
     }
-    list_card.add_button(
-        Button::new(ButtonType::Link)
-            .set_label(label)
-            .set_link(AJOU_LINK),
-    );
+    list_card.add_button(Button::link(label, AJOU_LINK.to_string()));
     if notices.is_empty() {
         list_card.add_item(ListItem::new("공지가 없습니다!").set_image(
             "http://k.kakaocdn.net/dn/APR96/btqqH7zLanY/kD5mIPX7TdD2NAxgP29cC0/1x1.jpg",
         ));
     } else {
-        list_card.add_button(Button::new(ButtonType::Share).set_label("공유하기"));
+        list_card.add_button(Button::share("공유하기"));
         for notice in notices.iter_mut() {
-            // if notice.title.graphemes(true).count() > 35 {
-            //     notice.title = UnicodeSegmentation::grapheme_indices(notice.title.as_str(), true)
-            //         .enumerate()
-            //         .filter(|&(i, _)| i < 32)
-            //         .map(|(_, (_, s))| s)
-            //         .collect::<Vec<&str>>()
-            //         .join("")
-            //         + "...";
-            // }
             let description = format!(
                 "[{}] {} {}",
                 notice.category,
@@ -331,7 +290,7 @@ pub async fn get_keyword_notice(kakao: web::Json<Value>) -> impl Responder {
     }
 
     let mut list_card = ListCard::new(format!("{} 결과", keyword));
-    list_card.add_button(Button::new(ButtonType::Share).set_label("공유하기"));
+    list_card.add_button(Button::share("공유하기"));
 
     // if keyword.to_string().graphemes(true).count() > 12 {}
 
@@ -341,14 +300,14 @@ pub async fn get_keyword_notice(kakao: web::Json<Value>) -> impl Responder {
         "홈페이지 열기"
     };
 
-    list_card.add_button(
-        Button::new(ButtonType::Link)
-            .set_label(label)
-            .set_link(format!(
-                "{}?mode=list&srSearchKey=&srSearchVal={}",
-                AJOU_LINK, keyword
-            )),
-    );
+    list_card.add_button(Button::link(
+        label,
+        format!(
+            "{}?mode=list&srSearchKey=&srSearchVal={}",
+            AJOU_LINK, keyword
+        )
+        .as_str(),
+    ));
 
     for notice in notices.iter_mut() {
         // if notice.title.graphemes(true).count() > 35 {
@@ -451,17 +410,17 @@ pub async fn get_category_notice(kakao: web::Json<Value>) -> impl Responder {
         };
 
     let mut list_card = ListCard::new(format!("{} 공지", keyword));
-    list_card.add_button(Button::new(ButtonType::Share).set_label("공유하기"));
+    list_card.add_button(Button::share("공유하기"));
 
-    list_card.add_button(
-        Button::new(ButtonType::Link)
-            .set_label(keyword)
-            .set_link(format!(
-                "{}?mode=list&srCategoryId={}",
-                AJOU_LINK,
-                CATEGORIES.get(keyword).unwrap()
-            )),
-    );
+    list_card.add_button(Button::link(
+        keyword,
+        format!(
+            "{}?mode=list&srCategoryId={}",
+            AJOU_LINK,
+            CATEGORIES.get(keyword).unwrap()
+        )
+        .as_str(),
+    ));
 
     for notice in notices.iter_mut() {
         // if notice.title.graphemes(true).count() > 35 {
