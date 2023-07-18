@@ -39,7 +39,7 @@ pub async fn get_weather() -> impl Responder {
 }
 
 #[post("/schedule")]
-pub async fn get_schedule(conn: web::Data<DbPool>) -> impl Responder {
+pub async fn get_schedule(conn: DbPool) -> impl Responder {
     let mut result = Template::new();
     let mut carousel = Carousel::new().set_type(BasicCard::id());
 

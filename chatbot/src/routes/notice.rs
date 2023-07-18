@@ -203,7 +203,7 @@ pub async fn get_more_today_notice(_: web::Json<Value>) -> impl Responder {
 }
 
 #[post("/yesterday")]
-pub async fn get_yesterday_notice(conn: web::Data<DbPool>) -> impl Responder {
+pub async fn get_yesterday_notice(conn: DbPool) -> impl Responder {
     let mut result = Template::new();
     result.add_qr(QuickReply::new("오늘", "오늘 공지 보여줘"));
     result.add_qr(QuickReply::new("어제", "어제 공지 보여줘"));

@@ -1,11 +1,8 @@
 pub mod info;
 pub mod notice;
-// pub mod route;
+pub mod user;
 
-#[cfg(feature = "mongo")]
 pub use crate::db::connection_mongo::DbPool;
-#[cfg(not(feature = "mongo"))]
-pub use crate::db::connection_mysql::DbPool;
 
 use actix_web::{body::BoxBody, http::header::ContentType, HttpRequest, HttpResponse, Responder};
 use kakao_rs::components::basics::Template;
@@ -18,6 +15,7 @@ pub struct Kakao {
 
 pub use info::init_info;
 pub use notice::init_notice;
+pub use user::init_user;
 
 // Responder
 impl Responder for Kakao {

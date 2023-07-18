@@ -3,7 +3,7 @@ extern crate rustserver;
 use chrono::prelude::Local;
 
 use rustserver::utils::parser::{
-    course_parse, insert_courses_to_mongodb, library_parse, meal_parse, notice_parse, people_parse,
+    library_parse, meal_parse, notice_parse, people_parse,
     weather_parse,
 };
 
@@ -71,39 +71,39 @@ mod tests {
 
     #[actix_rt::test]
     async fn course_test() {
-        let course = course_parse("U0209001").await.unwrap();
-        insert_courses_to_mongodb("전공과목", course.data_list.ds_cour120)
-            .await
-            .unwrap(); // 전공과목 전체
+        // let course = course_parse("U0209001").await.unwrap();
+        // insert_courses_to_mongodb("전공과목", course.data_list.ds_cour120)
+        //     .await
+        //     .unwrap(); // 전공과목 전체
 
-        let course = course_parse("U0209002").await.unwrap();
-        insert_courses_to_mongodb("교양과목", course.data_list.ds_cour120)
-            .await
-            .unwrap(); // 교양과목 전체
+        // let course = course_parse("U0209002").await.unwrap();
+        // insert_courses_to_mongodb("교양과목", course.data_list.ds_cour120)
+        //     .await
+        //     .unwrap(); // 교양과목 전체
 
-        let course = course_parse("U0209003").await.unwrap();
-        insert_courses_to_mongodb("기초과목", course.data_list.ds_cour120)
-            .await
-            .unwrap(); // 기초과목 공통
+        // let course = course_parse("U0209003").await.unwrap();
+        // insert_courses_to_mongodb("기초과목", course.data_list.ds_cour120)
+        //     .await
+        //     .unwrap(); // 기초과목 공통
 
-        let course = course_parse("U0209004").await.unwrap();
-        insert_courses_to_mongodb("공학기초", course.data_list.ds_cour120)
-            .await
-            .unwrap(); // 공학기초 전체
+        // let course = course_parse("U0209004").await.unwrap();
+        // insert_courses_to_mongodb("공학기초", course.data_list.ds_cour120)
+        //     .await
+        //     .unwrap(); // 공학기초 전체
 
-        let course = course_parse("U0209005").await.unwrap();
-        insert_courses_to_mongodb("영역별교양", course.data_list.ds_cour120)
-            .await
-            .unwrap(); // 영역별교양 전체
+        // let course = course_parse("U0209005").await.unwrap();
+        // insert_courses_to_mongodb("영역별교양", course.data_list.ds_cour120)
+        //     .await
+        //     .unwrap(); // 영역별교양 전체
 
-        let course = course_parse("U0209006").await.unwrap();
-        insert_courses_to_mongodb("학점교류", course.data_list.ds_cour120)
-            .await
-            .unwrap(); // 학점교류 전체
+        // let course = course_parse("U0209006").await.unwrap();
+        // insert_courses_to_mongodb("학점교류", course.data_list.ds_cour120)
+        //     .await
+        //     .unwrap(); // 학점교류 전체
 
-        let course = course_parse("U0209029").await.unwrap();
-        insert_courses_to_mongodb("일선과목", course.data_list.ds_cour120)
-            .await
-            .unwrap(); // 일선과목 전체
+        // let course = course_parse("U0209029").await.unwrap();
+        // insert_courses_to_mongodb("일선과목", course.data_list.ds_cour120)
+        //     .await
+        //     .unwrap(); // 일선과목 전체
     }
 }

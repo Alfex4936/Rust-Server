@@ -1,4 +1,5 @@
 use actix_cors::Cors;
+use rustserver::connection_mongo::Database;
 use std::time::Duration;
 // use actix_ratelimit::{MemoryStore, MemoryStoreActor, RateLimiter};
 use actix_web::{middleware, web, App, HttpServer};
@@ -16,7 +17,7 @@ async fn main() -> std::io::Result<()> {
     // print_type_of(&rustserver::route::get_notices); // &str
 
     // Initialize the MongoDB connection
-    let data = web::Data::new(rustserver::connection_mongo::init_mongo().await);
+    let db = web::Data::new(Database::new().await);
 
     // Start the HTTP server
     HttpServer::new(move || {
@@ -27,7 +28,7 @@ async fn main() -> std::io::Result<()> {
 
         App::new()
             .wrap(cors)
-            .app_data(data.clone()) // clone the MongoDB connection data for each HTTP request
+            .app_data(db.clone()) // clone the MongoDB connection data for each HTTP request
             .wrap(middleware::Logger::default()) // Use the default logger for request/response logs
             .service(
                 // Mount the notice routes under the "/notice" path
@@ -37,8 +38,12 @@ async fn main() -> std::io::Result<()> {
                 // Mount the info routes under the "/info" path
                 web::scope("/info").configure(rustserver::info::init_info),
             )
+        // .service(
+        //     // Mount the info routes under the "/info" path
+        //     web::scope("/user").configure(rustserver::user::init_user),
+        // )
     })
-    .keep_alive(Duration::from_secs(10)) // Keep the connection alive for 10 seconds
+    .keep_alive(Duration::from_secs(10)) // Keep the connection alive for 30 seconds
     .bind(rustserver::SERVER)? // Bind to the server address specified in the rustserver module
     .run() // Start the HTTP server
     .await

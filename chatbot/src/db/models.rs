@@ -24,6 +24,14 @@ pub struct Schedule {
     pub content: String,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct User {
+    pub id: String,
+    #[serde(skip_serializing)]
+    pub openai_key: String,
+    pub mode: String,
+}
+
 #[derive(Debug, Default)]
 pub struct Weather {
     pub max_temp: String,
@@ -338,6 +346,8 @@ pub struct Course {
         default
     )]
     lecture_type_name: Option<String>,
+
+    pub unique_id: String,
 }
 
 #[derive(Debug, Deserialize, Default)]
